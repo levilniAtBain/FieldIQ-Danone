@@ -1,0 +1,14 @@
+# Local development — self-signed TLS
+# Access via https://localhost on the same machine
+# For tablets on LAN: use https://<your-machine-ip> after trusting the cert
+
+localhost {
+  reverse_proxy app:3000
+}
+
+# Uncomment to serve on LAN IP for tablet access:
+# Replace 192.168.1.x with your actual local IP
+# :443 {
+#   tls internal
+#   reverse_proxy app:3000
+# }

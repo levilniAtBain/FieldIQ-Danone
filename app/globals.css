@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --radius: 0.625rem;
+
+  /* Brand (L'Oreal purple) */
+  --color-brand-50: #fdf2f8;
+  --color-brand-100: #fce7f3;
+  --color-brand-200: #f9a8d4;
+  --color-brand-500: #c026d3;
+  --color-brand-600: #a21caf;
+  --color-brand-700: #86198f;
+  --color-brand-900: #4a044e;
+
+  /* Status */
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-danger-50: #fef2f2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+
+  --border-radius-lg: var(--radius);
+  --border-radius-md: calc(var(--radius) - 2px);
+  --border-radius-sm: calc(var(--radius) - 4px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #ffffff;
+  color: #0a0a0a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Touch-friendly min target size for tablet */
+button,
+[role="button"],
+a {
+  min-height: 44px;
+  min-width: 44px;
+}

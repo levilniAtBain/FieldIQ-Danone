@@ -1,0 +1,64 @@
+services:
+  # ─── Next.js app ─────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - uploads:/app/uploads
+    environment:
+      - DATABASE_URL=postgresql://fieldiq:fieldiq@postgres:5432/fieldiq
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production-32chars!!}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NODE_ENV=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fieldiq
+
+  # ─── PostgreSQL ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fieldiq
+      POSTGRES_PASSWORD: fieldiq
+      POSTGRES_DB: fieldiq
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldiq -d fieldiq"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fieldiq
+
+  # ─── Caddy (HTTPS for camera/mic on tablets) ──────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - fieldiq
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:
+
+networks:
+  fieldiq:
+    driver: bridge
