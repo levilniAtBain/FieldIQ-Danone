@@ -1,0 +1,618 @@
+{
+  "summary": {
+    "total": 76,
+    "success": 1,
+    "failed": 75,
+    "success_rate": "1.3%"
+  },
+  "details": [
+    {
+      "sku": "VIC-001",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/liftactiv/liftactiv-supreme-spf30-50ml/V025393.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/liftactiv-supreme-spf30-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-002",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/liftactiv/liftactiv-b3-serum-30ml/V041253.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/liftactiv-b3-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-003",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/mineral-89/mineral-89-booster-50ml/V031261.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/mineral-89-booster-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-004",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/neovadiol/neovadiol-meno-5-bi-serum-30ml/V041513.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/neovadiol-meno5-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-005",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/capital-soleil/capital-soleil-uv-age-daily-spf50-40ml/V041529.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/capital-soleil-uv-age-daily-spf50-40ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-006",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/normaderm/normaderm-phytosolution-gel-nettoyant-200ml/V025261.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/normaderm-gel-nettoyant-200ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-007",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/dercos/dercos-antipelliculaire-ds-shampooing-200ml/V025127.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/dercos-antipelliculaire-ds-200ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-008",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/dercos/dercos-aminexil-clinical-5-femme-21-x-6ml/V025131.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/dercos-aminexil-clinical5-femme.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-009",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/aqualia-thermal/aqualia-thermal-creme-legere-50ml/V031283.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/aqualia-thermal-creme-legere-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "VIC-010",
+      "brand": "vichy",
+      "status": "http_error",
+      "product_url": "https://www.vichy.fr/capital-soleil/ideal-soleil-lait-spf50-corps-300ml/V025175.html",
+      "old_image_url": "https://www.vichy.fr/medias/sys_master/images/ideal-soleil-lait-spf50-corps-300ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-001",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/hydratants/creme-hydratante",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-creme-hydratante-340g.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-002",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/nettoyants/mousse-nettoyante-hydratante",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-mousse-nettoyante-hydratante-236ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-003",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/hydratants/lotion-hydratante-am-spf30",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-lotion-hydratante-am-spf30-52ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-004",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/serums/serum-retinol-anti-imperfections",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-serum-retinol-anti-imperfections-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-005",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/serums/serum-hydratant-acide-hyaluronique",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-serum-hydratant-ha-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-006",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-corps/nettoyants-corps/gel-nettoyant-hydratant",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-gel-nettoyant-hydratant-473ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-007",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-corps/hydratants-corps/baume-emollient",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-baume-emollient-corps-340g.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-008",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/soins-yeux/creme-contour-yeux",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-creme-contour-yeux-14ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-009",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-corps/hydratants-corps/lotion-hydratante-corps",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-lotion-hydratante-corps-473ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "CER-010",
+      "brand": "cerave",
+      "status": "http_error",
+      "product_url": "https://www.cerave.fr/soins-du-visage/nettoyants/gel-moussant-purifiant",
+      "old_image_url": "https://www.cerave.fr/medias/sys_master/images/cerave-gel-moussant-purifiant-236ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-001",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/anthelios/anthelios-uvmune-400-fluide-invisible-spf50-50ml/3337875796040.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/anthelios-uvmune-400-fluide-spf50-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-002",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/toleriane/toleriane-gel-nettoyant-doux-400ml/3337872413218.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/toleriane-gel-nettoyant-doux-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-003",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/effaclar/effaclar-duo-plus-spf30-40ml/3337875596274.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/effaclar-duo-plus-spf30-40ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-004",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/hyalu-b5/hyalu-b5-serum-30ml/3337872414871.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/hyalu-b5-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-005",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/cicaplast/cicaplast-baume-b5-100ml/3337872413454.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/cicaplast-baume-b5-100ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-006",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/retinol-b3/retinol-b3-serum-30ml/3337875797115.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/retinol-b3-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-007",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/toleriane/toleriane-double-repair-uv-spf30-75ml/3337875797061.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/toleriane-double-repair-uv-spf30-75ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-008",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/effaclar/effaclar-gel-purifiant-400ml/3337872413386.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/effaclar-gel-purifiant-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-009",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/lipikar/lipikar-baume-ap-m-400ml/3337875597691.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/lipikar-baume-apm-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "LRP-010",
+      "brand": "la_roche_posay",
+      "status": "http_error",
+      "product_url": "https://www.laroche-posay.fr/mela-b3/mela-b3-serum-30ml/3337875797108.html",
+      "old_image_url": "https://www.laroche-posay.fr/medias/sys_master/images/mela-b3-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-001",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/antioxidants/vitamin-c/c-e-ferulic/635494263008.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/ce-ferulic-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-002",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/antioxidants/vitamin-c/phloretin-cf/635494263022.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/phloretin-cf-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-003",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/moisturizers/h-a-intensifier/635494415987.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/ha-intensifier-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-004",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/moisturizers/age-interrupter-advanced/635494416021.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/age-interrupter-advanced-48ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-005",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/moisturizers/triple-lipid-restore-2-4-2/635494416038.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/triple-lipid-restore-48ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-006",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/sun-protection/physical-fusion-uv-defense-spf-50/635494264999.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/physical-fusion-uv-defense-spf50-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-007",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/retinol/retinol-0-3/635494263398.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/retinol-03-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-008",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/exfoliants/glycolic-10-renew-overnight/635494263121.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/glycolic-10-renew-overnight-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-009",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/pigment-correctors/discoloration-defense/635494416083.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/discoloration-defense-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKC-010",
+      "brand": "skinceuticals",
+      "status": "http_error",
+      "product_url": "https://www.skinceuticals.fr/antioxidants/vitamin-c/silymarin-cf/635494416090.html",
+      "old_image_url": "https://www.skinceuticals.fr/medias/sys_master/images/silymarin-cf-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-001",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/alphaRet-overnight-cream-30ml.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/alphaRet-overnight-cream-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-002",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/interfuse-treatment-cream-face.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/interfuse-treatment-cream-face-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-003",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/alto-defense-serum-30ml.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/alto-defense-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-004",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/tone-smart-spf-75-sunscreen-emulsion.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/tone-smart-spf75-68ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-005",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/even-tone-correcting-serum.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/even-tone-correcting-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-006",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/oxygen-infusion-wash.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/oxygen-infusion-wash-125ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "SKB-007",
+      "brand": "skinbetter",
+      "status": "error",
+      "product_url": "https://www.skinbetterscience.com/products/mystic-eye-cream.html",
+      "old_image_url": "https://www.skinbetterscience.com/media/catalog/product/mystic-eye-cream-15ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MIX-001",
+      "brand": "mixa",
+      "status": "http_error",
+      "product_url": "https://www.mixa.fr/hydratation-corps/baume-essentiel-peau-sensible-400ml",
+      "old_image_url": "https://www.mixa.fr/medias/sys_master/images/baume-essentiel-peau-sensible-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MIX-002",
+      "brand": "mixa",
+      "status": "http_error",
+      "product_url": "https://www.mixa.fr/soins-visage/creme-visage-anti-imperfections-50ml",
+      "old_image_url": "https://www.mixa.fr/medias/sys_master/images/creme-visage-anti-imperfections-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MIX-003",
+      "brand": "mixa",
+      "status": "http_error",
+      "product_url": "https://www.mixa.fr/hydratation-corps/lait-corps-peaux-sensibles-400ml",
+      "old_image_url": "https://www.mixa.fr/medias/sys_master/images/lait-corps-peaux-sensibles-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MIX-004",
+      "brand": "mixa",
+      "status": "http_error",
+      "product_url": "https://www.mixa.fr/soins-corps/gel-douche-apaisant-peaux-sensibles-400ml",
+      "old_image_url": "https://www.mixa.fr/medias/sys_master/images/gel-douche-apaisant-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MIX-005",
+      "brand": "mixa",
+      "status": "http_error",
+      "product_url": "https://www.mixa.fr/soins-visage/serum-expert-anti-taches-30ml",
+      "old_image_url": "https://www.mixa.fr/medias/sys_master/images/serum-expert-anti-taches-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-001",
+      "brand": "nyx",
+      "status": "http_error",
+      "product_url": "https://www.nyxcosmetics.fr/yeux/eyeliner/epic-ink-liner/NYX_070.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/epic-ink-liner.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-002",
+      "brand": "nyx",
+      "status": "not_found",
+      "product_url": "https://www.nyxcosmetics.fr/levres/gloss/butter-gloss/NYX_100.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/butter-gloss.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-003",
+      "brand": "nyx",
+      "status": "not_found",
+      "product_url": "https://www.nyxcosmetics.fr/levres/rouge-a-levres/soft-matte-lip-cream/NYX_103.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/soft-matte-lip-cream.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-004",
+      "brand": "nyx",
+      "status": "fallback_og",
+      "product_url": "https://www.nyxcosmetics.fr/teint/fond-de-teint/cant-stop-wont-stop-full-coverage-foundation/NYX_007.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/cant-stop-wont-stop-foundation.jpg",
+      "new_image_url": "https://www.nyxcosmetics.fr/dw/image/v2/AAQP_PRD/on/demandware.static/-/Sites-nyx-master-catalog/default/dw5f66a30c/ProductImages/2016/Lips/Soft_Matte_Lip_Cream/800897142896_softmattelipcream_sanpaulo_main.jpg"
+    },
+    {
+      "sku": "NYX-005",
+      "brand": "nyx",
+      "status": "http_error",
+      "product_url": "https://www.nyxcosmetics.fr/teint/contouring/highlight-and-contour-pro-palette/NYX_012.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/highlight-contour-pro-palette.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-006",
+      "brand": "nyx",
+      "status": "http_error",
+      "product_url": "https://www.nyxcosmetics.fr/teint/spray-fixateur/matte-finish-setting-spray/NYX_065.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/setting-spray-matte.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-007",
+      "brand": "nyx",
+      "status": "http_error",
+      "product_url": "https://www.nyxcosmetics.fr/yeux/crayon-yeux/jumbo-eye-pencil/NYX_601.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/jumbo-eye-pencil.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "NYX-008",
+      "brand": "nyx",
+      "status": "http_error",
+      "product_url": "https://www.nyxcosmetics.fr/levres/rouge-a-levres/powder-puff-lippie/NYX_PPL.html",
+      "old_image_url": "https://www.nyxcosmetics.fr/medias/sys_master/images/powder-puff-lippie.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-001",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/moisturizers/aquasource-gel/L8015200.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/aquasource-gel-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-002",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/serums/life-plankton-elixir/L8014900.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/life-plankton-elixir-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-003",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/serums/blue-retinol-serum/L8017500.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/blue-retinol-night-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-004",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/body-care/lait-corporel/L8014300.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/lait-corporel-400ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-005",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/homme/hydratants/homme-aquapower/L8013400.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/homme-aquapower-75ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-006",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/serums/blue-therapy-accelerated-serum/L8015100.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/blue-therapy-accelerated-serum-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-007",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/sun-care/waterlover-sun-milk-spf30/L8014700.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/waterlover-sun-milk-spf30-200ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "BIO-008",
+      "brand": "biotherm",
+      "status": "http_error",
+      "product_url": "https://www.biotherm.fr/moisturizers/aquasource-creme-riche/L8015300.html",
+      "old_image_url": "https://www.biotherm.fr/medias/sys_master/images/aquasource-creme-riche-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-001",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/retinoids/crystal-retinal-3/M8CRN3UK.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/crystal-retinal-3-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-002",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/retinoids/crystal-retinal-6/M8CRN6UK.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/crystal-retinal-6-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-003",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/vitamin-c/c-tetra-luxe/M8CTLUK.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/c-tetra-luxe-30ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-004",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/cleansers/surface-radiance-cleanse/M8SRCLNSE.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/surface-radiance-cleanse-150ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-005",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/sun-protection/physical-sunscreen-spf50/M8PHYSUN.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/physical-sunscreen-spf50-60ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-006",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/exfoliants/press-and-glow/M8PNGLWUK.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/press-and-glow-pha-100ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-007",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/moisturisers/advanced-day-total-protect/M8ADTPUK.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/advanced-day-total-protect-spf30-50ml.jpg",
+      "new_image_url": null
+    },
+    {
+      "sku": "MDK-008",
+      "brand": "medik8",
+      "status": "timeout",
+      "product_url": "https://www.medik8.fr/serums/hydr8-b5-intense/M8H8B5INT.html",
+      "old_image_url": "https://www.medik8.fr/medias/sys_master/images/hydr8-b5-intense-30ml.jpg",
+      "new_image_url": null
+    }
+  ]
+}

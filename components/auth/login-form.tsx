@@ -1,49 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import { cn } from "@/lib/utils";
-
-const schema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { loginAction } from "@/app/login/actions";
+import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
-  const router = useRouter();
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
-
-  async function onSubmit(values: FormValues) {
-    setServerError(null);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setServerError(data.error ?? "Login failed");
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
-  }
+  const [state, action, isPending] = useActionState(loginAction, null);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+    <form action={action} noValidate className="space-y-5">
       <div>
         <label
           htmlFor="email"
@@ -53,19 +19,17 @@ export function LoginForm() {
         </label>
         <input
           id="email"
+          name="email"
           type="email"
           autoComplete="email"
-          {...register("email")}
+          required
           className={cn(
             "w-full rounded-xl border px-4 py-3 text-sm outline-none transition",
             "focus:ring-2 focus:ring-brand-500 focus:border-brand-500",
-            errors.email ? "border-red-400" : "border-gray-200"
+            "border-gray-200"
           )}
           placeholder="you@loreal.com"
         />
-        {errors.email && (
-          <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
-        )}
       </div>
 
       <div>
@@ -77,37 +41,43 @@ export function LoginForm() {
         </label>
         <input
           id="password"
+          name="password"
           type="password"
           autoComplete="current-password"
-          {...register("password")}
+          required
           className={cn(
             "w-full rounded-xl border px-4 py-3 text-sm outline-none transition",
             "focus:ring-2 focus:ring-brand-500 focus:border-brand-500",
-            errors.password ? "border-red-400" : "border-gray-200"
+            "border-gray-200"
           )}
           placeholder="••••••••"
         />
-        {errors.password && (
-          <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
-        )}
       </div>
 
-      {serverError && (
+      {state?.error && (
         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {serverError}
+          {state.error}
         </div>
       )}
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isPending}
         className={cn(
           "w-full rounded-xl bg-brand-600 text-white font-medium py-3 text-sm",
           "hover:bg-brand-700 transition-colors",
-          "disabled:opacity-60 disabled:cursor-not-allowed"
+          "disabled:opacity-60 disabled:cursor-not-allowed",
+          "flex items-center justify-center gap-2"
         )}
       >
-        {isSubmitting ? "Signing in…" : "Sign in"}
+        {isPending ? (
+          <>
+            <Loader2 size={15} className="animate-spin" />
+            Signing in…
+          </>
+        ) : (
+          "Sign in"
+        )}
       </button>
     </form>
   );

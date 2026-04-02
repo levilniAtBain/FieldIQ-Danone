@@ -4,19 +4,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: development
+      target: production
     ports:
       - "3020:3000"   # Direct access on same machine: http://localhost:3020
     volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
       - uploads:/app/uploads
     environment:
       - DATABASE_URL=postgresql://fieldiq:fieldiq@postgres:5432/fieldiq
       - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production-32chars!!}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - NODE_ENV=development
+      - NODE_ENV=production
       # Corporate SSL proxy fix — allows outbound HTTPS to api.anthropic.com
       - NODE_TLS_REJECT_UNAUTHORIZED=0
     depends_on:

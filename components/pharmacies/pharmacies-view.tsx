@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
 import { PharmacyList } from "./pharmacy-list";
 import { PharmacyMap } from "./pharmacy-map";
 import type { PharmacyWithMeta } from "@/lib/db/queries/pharmacies";
-import { differenceInDays } from "date-fns";
 
 type View = "list" | "map";
+type VisitStatus = "green" | "amber" | "red";
+type PharmacyWithStatus = PharmacyWithMeta & { visitStatus: VisitStatus };
 
 const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
 
@@ -65,20 +66,11 @@ const VISIT_STATUS_DEFINITIONS = [
   },
 ];
 
-function getVisitStatus(pharmacy: PharmacyWithMeta): "green" | "amber" | "red" {
-  const lastVisit = pharmacy.visits?.[0];
-  if (!lastVisit?.completedAt) return "red";
-  const days = differenceInDays(new Date(), new Date(lastVisit.completedAt));
-  if (days <= 30) return "green";
-  if (days <= 60) return "amber";
-  return "red";
-}
-
 export function PharmaciesView({
   pharmacies,
   filterRepName,
 }: {
-  pharmacies: PharmacyWithMeta[];
+  pharmacies: PharmacyWithStatus[];
   filterRepName?: string;
 }) {
   const [view, setView] = useState<View>("list");
@@ -89,7 +81,6 @@ export function PharmaciesView({
 
   const filtered = useMemo(() => {
     return pharmacies
-      .map((p) => ({ ...p, visitStatus: getVisitStatus(p) }))
       .filter((p) => {
         if (search) {
           const q = search.toLowerCase();
@@ -109,7 +100,7 @@ export function PharmaciesView({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Pharmacies</h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -119,43 +110,45 @@ export function PharmaciesView({
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Legend toggle */}
           <button
             onClick={() => setShowLegend((v) => !v)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm transition-all",
+              "flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm transition-all",
               showLegend
                 ? "bg-brand-50 border-brand-200 text-brand-700"
-                : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                : "bg-white border-gray-200 text-gray-500"
             )}
           >
             <Info size={14} />
-            Legend
+            <span className="hidden sm:inline">Legend</span>
           </button>
           {/* View toggle */}
           <div className="flex rounded-xl bg-gray-100 p-1">
             <button
               onClick={() => setView("list")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all",
                 view === "list"
                   ? "bg-white text-gray-900 shadow-sm font-medium"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-500"
               )}
             >
-              <List size={15} /> List
+              <List size={15} />
+              <span className="hidden sm:inline ml-1">List</span>
             </button>
             <button
               onClick={() => setView("map")}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all",
                 view === "map"
                   ? "bg-white text-gray-900 shadow-sm font-medium"
-                  : "text-gray-500 hover:text-gray-700"
+                  : "text-gray-500"
               )}
             >
-              <Map size={15} /> Map
+              <Map size={15} />
+              <span className="hidden sm:inline ml-1">Map</span>
             </button>
           </div>
         </div>

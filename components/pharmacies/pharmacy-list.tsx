@@ -57,7 +57,7 @@ export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
               <div className="text-right hidden sm:block">
                 <TierBadge tier={p.tier} />
                 {lastVisit ? (
-                  <p className="text-xs text-gray-400 mt-0.5 flex items-center justify-end gap-1">
+                  <p className="text-xs text-gray-400 mt-0.5 flex items-center justify-end gap-1" suppressHydrationWarning>
                     <Clock size={10} />
                     {formatDistanceToNow(new Date(lastVisit), {
                       addSuffix: true,

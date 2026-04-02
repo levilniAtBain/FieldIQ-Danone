@@ -56,22 +56,38 @@ export async function GET(
 
   // Return a streaming response
   const encoder = new TextEncoder();
+  let controllerClosed = false;
   const stream = new ReadableStream({
     async start(controller) {
       try {
         await streamPreVisitBriefing(
           context,
           (chunk) => {
-            controller.enqueue(encoder.encode(chunk));
+            if (!controllerClosed) {
+              try {
+                controller.enqueue(encoder.encode(chunk));
+              } catch {
+                controllerClosed = true;
+              }
+            }
           },
           () => {
-            controller.close();
+            if (!controllerClosed) {
+              controllerClosed = true;
+              controller.close();
+            }
           }
         );
       } catch (err) {
         console.error("Briefing stream error:", err);
-        controller.error(err);
+        if (!controllerClosed) {
+          controllerClosed = true;
+          controller.error(err);
+        }
       }
+    },
+    cancel() {
+      controllerClosed = true;
     },
   });
 

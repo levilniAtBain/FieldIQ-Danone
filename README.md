@@ -26,5 +26,7 @@ Manager: marie.dupont@loreal.com / password123
 Rep 1: thomas.martin@loreal.com / password123
 Rep 2: sarah.bernard@loreal.com / password123
 
+docker-compose exec app sh -c 'echo $DATABASE_URL' 
+
 
 Ready to start Phase 2 (Claude API integration — shelf analysis, voice notes, order scanning)?

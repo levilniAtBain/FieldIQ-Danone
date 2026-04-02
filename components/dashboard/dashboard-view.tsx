@@ -48,10 +48,10 @@ export function DashboardView({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">
+        <h1 className="text-2xl font-semibold text-gray-900" suppressHydrationWarning>
           {greeting}, {user.name.split(" ")[0]}
         </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className="text-sm text-gray-500 mt-0.5" suppressHydrationWarning>
           {format(new Date(), "EEEE, MMMM d")}
         </p>
       </div>
