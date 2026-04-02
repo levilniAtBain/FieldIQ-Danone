@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   Loader2,
@@ -15,6 +15,8 @@ import {
   Mic,
   MicOff,
   FileText,
+  Search,
+  X,
 } from "lucide-react";
 
 export type OrderLine = {
@@ -75,9 +77,65 @@ export function OrderBuilder({
   const [totalAmount, setTotalAmount] = useState(existingOrderTotal ?? 0);
   const [error, setError] = useState<string | null>(null);
 
+  // Manual product search
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Array<{
+    id: string; sku: string; name: string; brand: string; category: string; unitPrice: string | null;
+  }>>([]);
+  const [searching, setSearching] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Submit
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // ── Manual product search ───────────────────────────────────────────────
+  const searchProducts = useCallback((q: string) => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (!q.trim()) { setSearchResults([]); return; }
+    searchDebounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/products/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        setSearchResults(data);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+  }, []);
+
+  function addProductManually(p: { id: string; sku: string; name: string; brand: string; unitPrice: string | null }) {
+    const existing = lines.findIndex((l) => l.productId === p.id);
+    let updated: OrderLine[];
+    if (existing >= 0) {
+      updated = lines.map((l, i) => i === existing ? { ...l, quantity: l.quantity + 1 } : l);
+    } else {
+      const price = parseFloat(p.unitPrice ?? "0") || 0;
+      updated = [...lines, {
+        productId: p.id,
+        sku: p.sku,
+        name: p.name,
+        brand: p.brand,
+        quantity: 1,
+        unitPrice: price,
+        source: "manual" as const,
+      }];
+    }
+    setLines(updated);
+    setTotalAmount(updated.reduce((s, l) => s + l.quantity * l.unitPrice, 0));
+    // Persist to DB if order exists
+    if (orderId) {
+      fetch(`/api/orders/${orderId}/lines`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lines: updated.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
+        }),
+      });
+    }
+  }
 
   // ── Voice recording ─────────────────────────────────────────────────────
   function startVoice() {
@@ -410,6 +468,57 @@ export function OrderBuilder({
             <p className="text-sm font-semibold text-gray-700">Total</p>
             <p className="text-lg font-bold text-gray-900">€{totalAmount.toFixed(2)}</p>
           </div>
+        </div>
+
+        {/* Manual product add */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => setShowSearch((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <span className="flex items-center gap-2"><Plus size={14} className="text-brand-500" /> Add a product manually</span>
+            {showSearch ? <X size={14} className="text-gray-400" /> : null}
+          </button>
+          {showSearch && (
+            <div className="px-4 pb-4 border-t border-gray-50 pt-3 space-y-2">
+              <div className="relative">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); searchProducts(e.target.value); }}
+                  placeholder="Search by name, brand, SKU…"
+                  className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                />
+              </div>
+              {searching && <p className="text-xs text-gray-400 text-center py-1"><Loader2 size={12} className="inline animate-spin mr-1" />Searching…</p>}
+              {searchResults.length > 0 && (
+                <div className="space-y-1 max-h-52 overflow-y-auto">
+                  {searchResults.map((p) => {
+                    const inOrder = lines.find((l) => l.productId === p.id);
+                    return (
+                      <div key={p.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-gray-50">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-gray-900 truncate">{p.name}</p>
+                          <p className="text-xs text-gray-400">{p.sku} · {p.brand.replace(/_/g, " ")} · €{parseFloat(p.unitPrice ?? "0").toFixed(2)}</p>
+                        </div>
+                        <button
+                          onClick={() => addProductManually(p)}
+                          className="ml-2 flex-shrink-0 flex items-center gap-1 bg-brand-50 text-brand-700 text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-brand-100 transition-colors"
+                        >
+                          <Plus size={12} />
+                          {inOrder ? `×${inOrder.quantity}` : "Add"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-2">No products found</p>
+              )}
+            </div>
+          )}
         </div>
 
         {error && (

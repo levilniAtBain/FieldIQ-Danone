@@ -175,6 +175,7 @@ export const products = pgTable(
     category: text("category").notNull(), // e.g. "sunscreen", "moisturizer"
     description: text("description"),
     imageUrl: text("image_url"),
+    productUrl: text("product_url"),
     unitPrice: decimal("unit_price", { precision: 10, scale: 2 }),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow().notNull(),
