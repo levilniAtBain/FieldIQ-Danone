@@ -5,7 +5,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/auth/session";
-import { MapPin, Phone, ArrowLeft, Plus, Calendar } from "lucide-react";
+import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink } from "lucide-react";
+import { AiBriefing } from "./ai-briefing";
 
 type Visit = {
   id: string;
@@ -117,7 +118,7 @@ export function PharmacyDetailView({
 
       {/* Tab content */}
       {tab === "overview" && <OverviewTab pharmacy={pharmacy} />}
-      {tab === "visits" && <VisitsTab visits={pharmacy.visits} pharmacyId={pharmacy.id} />}
+      {tab === "visits" && <VisitsTab visits={pharmacy.visits} pharmacyId={pharmacy.id} session={session} />}
       {tab === "orders" && (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
           <p className="text-gray-400 text-sm">Orders coming in Phase 3</p>
@@ -135,15 +136,7 @@ export function PharmacyDetailView({
 function OverviewTab({ pharmacy }: { pharmacy: Pharmacy }) {
   return (
     <div className="space-y-4">
-      {/* AI briefing placeholder */}
-      <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4">
-        <p className="text-xs font-semibold text-brand-700 uppercase tracking-wide mb-1">
-          AI Account Briefing
-        </p>
-        <p className="text-sm text-brand-800">
-          AI briefing will appear here after Phase 2 (Claude API integration).
-        </p>
-      </div>
+      <AiBriefing pharmacyId={pharmacy.id} />
 
       {/* Notes */}
       {pharmacy.notes && (
@@ -170,9 +163,11 @@ function OverviewTab({ pharmacy }: { pharmacy: Pharmacy }) {
 function VisitsTab({
   visits,
   pharmacyId,
+  session,
 }: {
   visits: Visit[];
   pharmacyId: string;
+  session: Session;
 }) {
   if (visits.length === 0) {
     return (
@@ -204,15 +199,27 @@ function VisitsTab({
                   {format(new Date(v.completedAt), "dd MMM yyyy")}
                 </span>
               )}
+              {!v.completedAt && v.scheduledAt && (
+                <span className="text-xs text-gray-400">
+                  {formatDistanceToNow(new Date(v.scheduledAt), { addSuffix: true })}
+                </span>
+              )}
             </div>
-            {v.scheduledAt && (
-              <span className="text-xs text-gray-400">
-                Scheduled {formatDistanceToNow(new Date(v.scheduledAt), { addSuffix: true })}
-              </span>
+            {session.role === "rep" && (
+              <Link
+                href={`/pharmacies/${pharmacyId}/visit/${v.id}`}
+                className="flex items-center gap-1 text-xs text-brand-600 font-medium hover:text-brand-800"
+              >
+                <ExternalLink size={12} />
+                {v.status === "completed" ? "Reopen" : "Continue"}
+              </Link>
             )}
           </div>
           {v.notes && (
             <p className="text-sm text-gray-700 line-clamp-2">{v.notes}</p>
+          )}
+          {v.aiReportDraft && !v.notes && (
+            <p className="text-xs text-gray-400 italic line-clamp-2">{v.aiReportDraft}</p>
           )}
         </div>
       ))}
