@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Map, List, Search, SlidersHorizontal } from "lucide-react";
+import { Map, List, Search, Info, X } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PharmacyList } from "./pharmacy-list";
 import { PharmacyMap } from "./pharmacy-map";
@@ -11,6 +12,58 @@ import { differenceInDays } from "date-fns";
 type View = "list" | "map";
 
 const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
+
+const TIER_DEFINITIONS = [
+  {
+    tier: "platinum",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+    dot: "bg-purple-400",
+    label: "Platinum",
+    description: "Top 5% — highest volume, flagship accounts",
+  },
+  {
+    tier: "gold",
+    color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    dot: "bg-yellow-400",
+    label: "Gold",
+    description: "High volume, strong L'Oréal presence",
+  },
+  {
+    tier: "silver",
+    color: "bg-gray-100 text-gray-600 border-gray-200",
+    dot: "bg-gray-400",
+    label: "Silver",
+    description: "Medium volume, growth potential",
+  },
+  {
+    tier: "bronze",
+    color: "bg-orange-50 text-orange-700 border-orange-200",
+    dot: "bg-orange-300",
+    label: "Bronze",
+    description: "Lower volume, emerging or occasional accounts",
+  },
+];
+
+const VISIT_STATUS_DEFINITIONS = [
+  {
+    status: "green" as const,
+    bg: "bg-success-500",
+    label: "On track",
+    description: "Last visit < 30 days ago",
+  },
+  {
+    status: "amber" as const,
+    bg: "bg-warning-500",
+    label: "Due soon",
+    description: "Last visit 30–60 days ago",
+  },
+  {
+    status: "red" as const,
+    bg: "bg-danger-500",
+    label: "Overdue",
+    description: "Last visit > 60 days ago or never visited",
+  },
+];
 
 function getVisitStatus(pharmacy: PharmacyWithMeta): "green" | "amber" | "red" {
   const lastVisit = pharmacy.visits?.[0];
@@ -23,13 +76,16 @@ function getVisitStatus(pharmacy: PharmacyWithMeta): "green" | "amber" | "red" {
 
 export function PharmaciesView({
   pharmacies,
+  filterRepName,
 }: {
   pharmacies: PharmacyWithMeta[];
+  filterRepName?: string;
 }) {
   const [view, setView] = useState<View>("list");
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [showLegend, setShowLegend] = useState(false);
 
   const filtered = useMemo(() => {
     return pharmacies
@@ -57,35 +113,122 @@ export function PharmaciesView({
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Pharmacies</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {pharmacies.length} accounts
+            {pharmacies.length} account{pharmacies.length !== 1 ? "s" : ""}
+            {filterRepName && (
+              <span className="ml-1">· {filterRepName}</span>
+            )}
           </p>
         </div>
-        {/* View toggle */}
-        <div className="flex rounded-xl bg-gray-100 p-1">
+        <div className="flex items-center gap-2">
+          {/* Legend toggle */}
           <button
-            onClick={() => setView("list")}
+            onClick={() => setShowLegend((v) => !v)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
-              view === "list"
-                ? "bg-white text-gray-900 shadow-sm font-medium"
-                : "text-gray-500 hover:text-gray-700"
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm transition-all",
+              showLegend
+                ? "bg-brand-50 border-brand-200 text-brand-700"
+                : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
             )}
           >
-            <List size={15} /> List
+            <Info size={14} />
+            Legend
           </button>
-          <button
-            onClick={() => setView("map")}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
-              view === "map"
-                ? "bg-white text-gray-900 shadow-sm font-medium"
-                : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            <Map size={15} /> Map
-          </button>
+          {/* View toggle */}
+          <div className="flex rounded-xl bg-gray-100 p-1">
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                view === "list"
+                  ? "bg-white text-gray-900 shadow-sm font-medium"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              <List size={15} /> List
+            </button>
+            <button
+              onClick={() => setView("map")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                view === "map"
+                  ? "bg-white text-gray-900 shadow-sm font-medium"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              <Map size={15} /> Map
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Rep filter banner */}
+      {filterRepName && (
+        <div className="flex items-center justify-between bg-brand-50 border border-brand-100 rounded-xl px-4 py-2.5 text-sm">
+          <span className="text-brand-800">
+            Showing pharmacies for <strong>{filterRepName}</strong>
+          </span>
+          <Link
+            href="/pharmacies"
+            className="flex items-center gap-1 text-brand-600 hover:text-brand-800 font-medium"
+          >
+            <X size={14} /> Clear filter
+          </Link>
+        </div>
+      )}
+
+      {/* Legend panel */}
+      {showLegend && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 grid sm:grid-cols-2 gap-5">
+          {/* Visit status */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              Visit status (dot colour)
+            </p>
+            <div className="space-y-2">
+              {VISIT_STATUS_DEFINITIONS.map((d) => (
+                <div key={d.status} className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      "w-3 h-3 rounded-full flex-shrink-0 mt-0.5",
+                      d.bg
+                    )}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {d.label}
+                    </p>
+                    <p className="text-xs text-gray-500">{d.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tiers */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              Account tiers (badge)
+            </p>
+            <div className="space-y-2">
+              {TIER_DEFINITIONS.map((d) => (
+                <div key={d.tier} className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      "text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0",
+                      d.color
+                    )}
+                  >
+                    {d.label}
+                  </span>
+                  <p className="text-xs text-gray-500 leading-5">
+                    {d.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search + filters */}
       <div className="flex gap-2 flex-wrap">
@@ -103,7 +246,7 @@ export function PharmaciesView({
         </div>
 
         {/* Tier filter chips */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {TIERS.map((tier) => (
             <button
               key={tier}
@@ -126,31 +269,29 @@ export function PharmaciesView({
           ))}
         </div>
 
-        {/* Visit status filter */}
+        {/* Visit status filter with labels */}
         <div className="flex gap-1.5">
-          {(["green", "amber", "red"] as const).map((s) => (
+          {VISIT_STATUS_DEFINITIONS.map((s) => (
             <button
-              key={s}
+              key={s.status}
               onClick={() =>
                 setStatusFilter((prev) =>
-                  prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+                  prev.includes(s.status)
+                    ? prev.filter((x) => x !== s.status)
+                    : [...prev, s.status]
                 )
               }
               className={cn(
-                "w-9 h-9 rounded-xl border-2 transition-all",
-                s === "green" && "bg-success-500 border-success-600",
-                s === "amber" && "bg-warning-500 border-warning-600",
-                s === "red" && "bg-danger-500 border-danger-600",
-                statusFilter.includes(s) ? "opacity-100 scale-95" : "opacity-40"
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all",
+                statusFilter.includes(s.status)
+                  ? "opacity-100 border-gray-300 bg-gray-50"
+                  : "opacity-50 border-gray-200 bg-white hover:opacity-75"
               )}
-              title={
-                s === "green"
-                  ? "Visited < 30d"
-                  : s === "amber"
-                  ? "Visited 30-60d"
-                  : "Overdue > 60d"
-              }
-            />
+              title={s.description}
+            >
+              <span className={cn("w-2.5 h-2.5 rounded-full", s.bg)} />
+              {s.label}
+            </button>
           ))}
         </div>
       </div>

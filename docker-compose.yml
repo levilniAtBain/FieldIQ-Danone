@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: development
+    ports:
+      - "3020:3000"   # Direct access on same machine: http://localhost:3020
     volumes:
       - .:/app
       - /app/node_modules
@@ -38,12 +40,14 @@ services:
     networks:
       - fieldiq
 
-  # ─── Caddy (HTTPS for camera/mic on tablets) ──────────────────────────────
+  # ─── Caddy (HTTPS for camera/mic on tablets over LAN) ───────────────────
+  # Use https://<your-LAN-IP>:8443 from a tablet on the same network.
+  # On your own laptop, use http://localhost:3000 instead (no Caddy needed).
   caddy:
     image: caddy:2-alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"     # HTTP (redirects to HTTPS)
+      - "8443:443"    # HTTPS — access from tablet: https://<LAN-IP>:8443
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

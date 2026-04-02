@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "https://localhost",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020",
     ignoreHTTPSErrors: true, // for self-signed Caddy cert
     trace: "on-first-retry",
     video: "retain-on-failure",

@@ -1,14 +1,15 @@
-# Local development — self-signed TLS
-# Access via https://localhost on the same machine
-# For tablets on LAN: use https://<your-machine-ip> after trusting the cert
+# Local development Caddy config
+#
+# Same-machine access (laptop):  http://localhost:3000  (direct, no Caddy)
+# Tablet access over LAN:        https://<your-LAN-IP>:8443
+#   → Camera/mic work because HTTPS context is met.
+#   → Accept the self-signed cert warning once on the tablet.
 
 localhost {
   reverse_proxy app:3000
 }
 
-# Uncomment to serve on LAN IP for tablet access:
-# Replace 192.168.1.x with your actual local IP
-# :443 {
-#   tls internal
-#   reverse_proxy app:3000
-# }
+# Catch-all for LAN IP access (tablets, other devices on same network)
+:80 {
+  reverse_proxy app:3000
+}

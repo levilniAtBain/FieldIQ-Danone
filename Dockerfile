@@ -1,7 +1,6 @@
 # ─── Base ─────────────────────────────────────────────────────────────────────
 FROM node:24-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache libc6-compat
 
 # ─── Development ──────────────────────────────────────────────────────────────
 FROM base AS development

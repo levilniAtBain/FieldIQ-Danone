@@ -297,6 +297,10 @@ export const visitsRelations = relations(visits, ({ one, many }) => ({
   order: one(orders, { fields: [visits.id], references: [orders.visitId] }),
 }));
 
+export const visitFilesRelations = relations(visitFiles, ({ one }) => ({
+  visit: one(visits, { fields: [visitFiles.visitId], references: [visits.id] }),
+}));
+
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   pharmacy: one(pharmacies, {
     fields: [orders.pharmacyId],

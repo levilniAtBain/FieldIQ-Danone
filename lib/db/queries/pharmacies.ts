@@ -6,24 +6,25 @@ export type PharmacyWithMeta = Awaited<
   ReturnType<typeof getPharmaciesForUser>
 >[number];
 
-export async function getPharmaciesForUser(userId: string, role: string) {
+export async function getPharmaciesForUser(
+  userId: string,
+  role: string,
+  filterRepId?: string
+) {
   if (role === "manager") {
-    // Manager sees all pharmacies for reps in their region
+    // Manager sees all pharmacies for reps in their region,
+    // optionally filtered to a specific rep.
     const manager = await db.query.users.findFirst({
       where: eq(users.id, userId),
       columns: { regionId: true },
     });
     if (!manager?.regionId) return [];
 
-    const reps = await db.query.users.findMany({
-      where: and(eq(users.regionId, manager.regionId), eq(users.role, "rep")),
-      columns: { id: true },
-    });
-    const repIds = reps.map((r) => r.id);
-    if (repIds.length === 0) return [];
-
     return db.query.pharmacies.findMany({
-      where: and(eq(pharmacies.isActive, true)),
+      where: and(
+        eq(pharmacies.isActive, true),
+        filterRepId ? eq(pharmacies.repId, filterRepId) : undefined
+      ),
       with: {
         rep: { columns: { id: true, name: true } },
         visits: {
@@ -58,7 +59,6 @@ export async function getPharmacyById(id: string) {
       visits: {
         orderBy: [desc(visits.completedAt)],
         limit: 10,
-        with: { files: true },
       },
     },
   });
