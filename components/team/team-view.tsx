@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type { Session } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import { Building2, Calendar, Clock } from "lucide-react";
+import { Building2, Calendar, Clock, AlertCircle } from "lucide-react";
 
 type RepStat = {
   id: string;
@@ -12,6 +12,7 @@ type RepStat = {
   email: string;
   pharmacyCount: number;
   visitsThisWeek: number;
+  openActions: number;
   lastVisitAt: Date | null;
 };
 
@@ -32,7 +33,7 @@ export function TeamView({
       </div>
 
       {/* Summary KPIs */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-2xl font-bold text-gray-900">{reps.length}</p>
           <p className="text-xs text-gray-500 mt-0.5">Field reps</p>
@@ -41,7 +42,7 @@ export function TeamView({
           <p className="text-2xl font-bold text-gray-900">
             {reps.reduce((s, r) => s + r.pharmacyCount, 0)}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">Pharmacies covered</p>
+          <p className="text-xs text-gray-500 mt-0.5">Pharmacies</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <p className="text-2xl font-bold text-gray-900">
@@ -49,54 +50,61 @@ export function TeamView({
           </p>
           <p className="text-xs text-gray-500 mt-0.5">Visits this week</p>
         </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <p className={cn(
+            "text-2xl font-bold",
+            reps.reduce((s, r) => s + r.openActions, 0) > 10 ? "text-warning-600" : "text-gray-900"
+          )}>
+            {reps.reduce((s, r) => s + r.openActions, 0)}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Open actions</p>
+        </div>
       </div>
 
       {/* Rep list */}
       <div className="space-y-3">
         {reps.map((rep) => (
-          <div
-            key={rep.id}
-            className="bg-white rounded-2xl border border-gray-100 p-5"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 font-semibold flex items-center justify-center text-sm flex-shrink-0">
-                  {rep.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">{rep.name}</p>
-                  <p className="text-sm text-gray-500">{rep.email}</p>
-                </div>
+          <div key={rep.id} className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 font-semibold flex items-center justify-center text-sm flex-shrink-0">
+                {rep.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">{rep.name}</p>
+                <p className="text-sm text-gray-500">{rep.email}</p>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Building2 size={14} className="text-gray-400" />
                 <span>
-                  <span className="font-semibold text-gray-900">
-                    {rep.pharmacyCount}
-                  </span>{" "}
+                  <span className="font-semibold text-gray-900">{rep.pharmacyCount}</span>{" "}
                   pharmacies
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Calendar size={14} className="text-gray-400" />
                 <span>
-                  <span className="font-semibold text-gray-900">
-                    {rep.visitsThisWeek}
-                  </span>{" "}
+                  <span className="font-semibold text-gray-900">{rep.visitsThisWeek}</span>{" "}
                   visits this week
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <AlertCircle size={14} className={rep.openActions > 5 ? "text-warning-500" : "text-gray-400"} />
+                <span>
+                  <span className={cn("font-semibold", rep.openActions > 5 ? "text-warning-600" : "text-gray-900")}>
+                    {rep.openActions}
+                  </span>{" "}
+                  open actions
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Clock size={14} className="text-gray-400" />
                 {rep.lastVisitAt ? (
                   <span suppressHydrationWarning>
-                    Last visit{" "}
-                    {formatDistanceToNow(new Date(rep.lastVisitAt), {
-                      addSuffix: true,
-                    })}
+                    Last{" "}
+                    {formatDistanceToNow(new Date(rep.lastVisitAt), { addSuffix: true })}
                   </span>
                 ) : (
                   <span className="text-danger-500">No visits yet</span>

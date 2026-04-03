@@ -40,10 +40,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Touch-friendly min target size for tablet */
+/* Touch-friendly min target size – only for standalone tap targets, not inline links */
 button,
-[role="button"],
-a {
+[role="button"] {
   min-height: 44px;
   min-width: 44px;
 }

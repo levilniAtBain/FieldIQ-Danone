@@ -524,49 +524,90 @@ function ShelfCaptureCard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string;
-      const base64 = dataUrl.split(",")[1];
-      const mimeType = file.type as "image/jpeg" | "image/png" | "image/webp";
+  /**
+   * Compress and convert any image (including HEIC from iOS) to JPEG via canvas.
+   * Returns { dataUrl, base64, mimeType } with a max dimension of 1920px.
+   */
+  function compressImage(file: File): Promise<{ dataUrl: string; base64: string; mimeType: "image/jpeg" }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1920;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          const ratio = Math.min(MAX / width, MAX / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        URL.revokeObjectURL(url);
+        resolve({ dataUrl, base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+      img.src = url;
+    });
+  }
 
-      // Add placeholder while analyzing
-      const tempId = `tmp-${Date.now()}`;
+  async function handleFile(file: File) {
+    let dataUrl: string;
+    let base64: string;
+    let mimeType: "image/jpeg" | "image/png" | "image/webp";
+
+    try {
+      const compressed = await compressImage(file);
+      dataUrl = compressed.dataUrl;
+      base64 = compressed.base64;
+      mimeType = compressed.mimeType;
+    } catch {
       setPhotos((prev) => [
         ...prev,
-        { fileId: null, preview: dataUrl, analysis: null, analyzing: true, error: null, expanded: false },
+        { fileId: null, preview: "", analysis: null, analyzing: false, error: "Could not read image", expanded: false },
       ]);
+      return;
+    }
 
-      try {
-        const res = await fetch(`/api/visits/${visitId}/analyze-shelf`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, mimeType }),
-        });
-        if (!res.ok) throw new Error("Analysis failed");
-        const data: { fileId: string; analysis: ShelfAnalysisResult } = await res.json();
+    // Add placeholder while analyzing
+    setPhotos((prev) => [
+      ...prev,
+      { fileId: null, preview: dataUrl, analysis: null, analyzing: true, error: null, expanded: false },
+    ]);
 
-        setPhotos((prev) =>
-          prev.map((p) =>
-            p.fileId === null && p.preview === dataUrl
-              ? { ...p, fileId: data.fileId, analysis: data.analysis, analyzing: false, expanded: true }
-              : p
-          )
-        );
-        onResult(data.analysis);
-      } catch {
-        setPhotos((prev) =>
-          prev.map((p) =>
-            p.fileId === null && p.preview === dataUrl
-              ? { ...p, analyzing: false, error: "Analysis failed" }
-              : p
-          )
-        );
+    try {
+      const res = await fetch(`/api/visits/${visitId}/analyze-shelf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `Analysis failed (${res.status})`);
       }
-      void tempId;
-    };
-    reader.readAsDataURL(file);
+      const data: { fileId: string; analysis: ShelfAnalysisResult } = await res.json();
+
+      setPhotos((prev) =>
+        prev.map((p) =>
+          p.fileId === null && p.preview === dataUrl
+            ? { ...p, fileId: data.fileId, analysis: data.analysis, analyzing: false, expanded: true }
+            : p
+        )
+      );
+      onResult(data.analysis);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Analysis failed";
+      setPhotos((prev) =>
+        prev.map((p) =>
+          p.fileId === null && p.preview === dataUrl
+            ? { ...p, analyzing: false, error: msg }
+            : p
+        )
+      );
+    }
     // Reset input so same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = "";
   }

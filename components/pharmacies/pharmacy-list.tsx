@@ -13,6 +13,7 @@ type Pharmacy = {
   pharmacistName: string | null;
   visits: { completedAt: Date | null }[];
   visitStatus: "green" | "amber" | "red";
+  rep?: { name: string } | null;
 };
 
 export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
@@ -54,14 +55,15 @@ export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
+              <div className="text-right">
                 <TierBadge tier={p.tier} />
+                {p.rep && (
+                  <p className="text-xs text-gray-400 mt-0.5">{p.rep.name}</p>
+                )}
                 {lastVisit ? (
                   <p className="text-xs text-gray-400 mt-0.5 flex items-center justify-end gap-1" suppressHydrationWarning>
                     <Clock size={10} />
-                    {formatDistanceToNow(new Date(lastVisit), {
-                      addSuffix: true,
-                    })}
+                    {formatDistanceToNow(new Date(lastVisit), { addSuffix: true })}
                   </p>
                 ) : (
                   <p className="text-xs text-danger-500 mt-0.5">Never visited</p>
