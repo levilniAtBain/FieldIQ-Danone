@@ -2,12 +2,12 @@ import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { getPharmacyById, canAccessPharmacy } from "@/lib/db/queries/pharmacies";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, pharmacies } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { streamPreVisitBriefing, type BriefingContext } from "@/lib/ai/claude";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -28,6 +28,21 @@ export async function GET(
 
   if (!pharmacy || !hasAccess) {
     return new Response("Not found", { status: 404 });
+  }
+
+  const forceRefresh = req.nextUrl.searchParams.get("refresh") === "true";
+
+  // Serve from cache if available and not forcing refresh
+  if (!forceRefresh && pharmacy.aiBriefingCache) {
+    return new Response(pharmacy.aiBriefingCache, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "X-Briefing-Cached": "true",
+        "X-Briefing-Cached-At": pharmacy.aiBriefingCachedAt
+          ? new Date(pharmacy.aiBriefingCachedAt).toISOString()
+          : "",
+      },
+    });
   }
 
   const rep = await db.query.users.findFirst({
@@ -54,15 +69,18 @@ export async function GET(
     pendingActions,
   };
 
-  // Return a streaming response
+  // Stream and accumulate for caching
   const encoder = new TextEncoder();
   let controllerClosed = false;
+  let fullText = "";
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
         await streamPreVisitBriefing(
           context,
           (chunk) => {
+            fullText += chunk;
             if (!controllerClosed) {
               try {
                 controller.enqueue(encoder.encode(chunk));
@@ -71,7 +89,21 @@ export async function GET(
               }
             }
           },
-          () => {
+          async () => {
+            // Save to cache
+            if (fullText) {
+              try {
+                await db
+                  .update(pharmacies)
+                  .set({
+                    aiBriefingCache: fullText,
+                    aiBriefingCachedAt: new Date(),
+                  })
+                  .where(eq(pharmacies.id, id));
+              } catch (err) {
+                console.error("Failed to cache briefing:", err);
+              }
+            }
             if (!controllerClosed) {
               controllerClosed = true;
               controller.close();
@@ -96,6 +128,7 @@ export async function GET(
       "Content-Type": "text/plain; charset=utf-8",
       "Transfer-Encoding": "chunked",
       "Cache-Control": "no-cache",
+      "X-Briefing-Cached": "false",
     },
   });
 }

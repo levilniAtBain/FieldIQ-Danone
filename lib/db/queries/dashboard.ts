@@ -81,3 +81,28 @@ export async function getRepKPIs(repId: string) {
     openActions: openActions[0]?.count ?? 0,
   };
 }
+
+export async function getRepOpenItems(repId: string) {
+  const [openVisits, draftOrders, pendingActions] = await Promise.all([
+    db.query.visits.findMany({
+      where: and(eq(visits.repId, repId), eq(visits.status, "in_progress")),
+      columns: { id: true, startedAt: true, createdAt: true },
+      with: { pharmacy: { columns: { id: true, name: true } } },
+      orderBy: [desc(visits.createdAt)],
+    }),
+    db.query.orders.findMany({
+      where: and(eq(orders.repId, repId), eq(orders.status, "draft")),
+      columns: { id: true, createdAt: true },
+      with: { pharmacy: { columns: { id: true, name: true } } },
+      orderBy: [desc(orders.createdAt)],
+    }),
+    db.query.actions.findMany({
+      where: and(eq(actions.repId, repId), isNull(actions.accepted)),
+      columns: { id: true, createdAt: true, title: true },
+      with: { pharmacy: { columns: { id: true, name: true } } },
+      orderBy: [desc(actions.createdAt)],
+    }),
+  ]);
+
+  return { openVisits, draftOrders, pendingActions };
+}

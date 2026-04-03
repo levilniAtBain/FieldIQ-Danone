@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { format, formatDistanceToNow } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, formatDistanceToNow, addBusinessDays } from "date-fns";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/auth/session";
-import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink } from "lucide-react";
+import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink, Sparkles, CheckCircle, X, AlertTriangle, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Zap, Truck, Package } from "lucide-react";
 import { AiBriefing } from "./ai-briefing";
 
 type Visit = {
@@ -41,7 +42,9 @@ export function PharmacyDetailView({
   pharmacy: Pharmacy;
   session: Session;
 }) {
-  const [tab, setTab] = useState<Tab>("overview");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab | null) ?? "overview";
+  const [tab, setTab] = useState<Tab>(initialTab);
 
   return (
     <div className="space-y-5">
@@ -120,20 +123,78 @@ export function PharmacyDetailView({
       {tab === "overview" && <OverviewTab pharmacy={pharmacy} />}
       {tab === "visits" && <VisitsTab visits={pharmacy.visits} pharmacyId={pharmacy.id} session={session} />}
       {tab === "orders" && (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
-          <p className="text-gray-400 text-sm">Orders coming in Phase 3</p>
-        </div>
+        <OrdersTab pharmacyId={pharmacy.id} pharmacyName={pharmacy.name} />
       )}
       {tab === "actions" && (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
-          <p className="text-gray-400 text-sm">AI Actions coming in Phase 2</p>
-        </div>
+        <ActionsTab pharmacyId={pharmacy.id} session={session} />
       )}
     </div>
   );
 }
 
+type OrderSummary = {
+  id: string;
+  status: string;
+  totalAmount: string | null;
+  createdAt: Date | string;
+  lines: { product: { name: string } }[];
+};
+
+export type OrderLine = {
+  id: string;
+  quantity: number;
+  unitPrice: string | null;
+  lineTotal: string | null;
+  product: { id: string; name: string; sku: string; brand: string };
+};
+
+export type OrderRow = {
+  id: string;
+  status: string;
+  totalAmount: string | null;
+  createdAt: Date | string;
+  submittedAt: Date | string | null;
+  deliveredAt: Date | string | null;
+  sourceType: string | null;
+  lines: OrderLine[];
+};
+
+function promisedDeliveryDate(from: Date | string): string {
+  return format(addBusinessDays(new Date(from), 5), "d MMM yyyy");
+}
+
+type ActionSummary = {
+  id: string;
+  type: string;
+  title: string;
+  accepted: boolean | null;
+  createdAt: Date | string;
+};
+
 function OverviewTab({ pharmacy }: { pharmacy: Pharmacy }) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [orders, setOrders] = useState<OrderSummary[]>([]);
+  const [actions, setActions] = useState<ActionSummary[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  async function loadHistory() {
+    if (historyLoaded) { setHistoryOpen((v) => !v); return; }
+    setHistoryOpen(true);
+    setHistoryLoading(true);
+    try {
+      const [ordersRes, actionsRes] = await Promise.all([
+        fetch(`/api/pharmacies/${pharmacy.id}/orders`),
+        fetch(`/api/pharmacies/${pharmacy.id}/actions`),
+      ]);
+      if (ordersRes.ok) setOrders((await ordersRes.json()).orders ?? []);
+      if (actionsRes.ok) setActions((await actionsRes.json()).actions ?? []);
+      setHistoryLoaded(true);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <AiBriefing pharmacyId={pharmacy.id} />
@@ -147,6 +208,116 @@ function OverviewTab({ pharmacy }: { pharmacy: Pharmacy }) {
           <p className="text-sm text-gray-700">{pharmacy.notes}</p>
         </div>
       )}
+
+      {/* Collapsible history */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <button
+          onClick={loadHistory}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <span className="flex items-center gap-2 text-gray-600">
+            <Calendar size={14} />
+            Account history
+            <span className="text-xs text-gray-400 font-normal">
+              {pharmacy.visits.length} visit{pharmacy.visits.length !== 1 ? "s" : ""}
+            </span>
+          </span>
+          {historyLoading
+            ? <Loader2 size={14} className="animate-spin text-gray-400" />
+            : historyOpen ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />
+          }
+        </button>
+
+        {historyOpen && !historyLoading && (
+          <div className="border-t border-gray-50 px-4 pb-4 pt-3 space-y-4">
+            {/* Visits */}
+            {pharmacy.visits.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Calendar size={11} /> Visits
+                </p>
+                <div className="space-y-1.5">
+                  {pharmacy.visits.slice(0, 5).map((v) => (
+                    <div key={v.id} className="flex items-start gap-2.5 text-sm">
+                      <span className={cn(
+                        "mt-1 w-2 h-2 rounded-full flex-shrink-0",
+                        v.status === "completed" ? "bg-success-500" :
+                        v.status === "in_progress" ? "bg-brand-500" : "bg-gray-300"
+                      )} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-700 capitalize">{v.status.replace("_", " ")}</p>
+                        {v.notes && <p className="text-xs text-gray-400 truncate">{v.notes}</p>}
+                      </div>
+                      {v.completedAt && (
+                        <span className="text-xs text-gray-400 flex-shrink-0 suppressHydrationWarning">
+                          {format(new Date(v.completedAt), "d MMM yy")}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Orders */}
+            {orders.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <ShoppingCart size={11} /> Orders
+                </p>
+                <div className="space-y-1.5">
+                  {orders.slice(0, 5).map((o) => (
+                    <div key={o.id} className="flex items-center gap-2.5 text-sm">
+                      <span className={cn(
+                        "w-2 h-2 rounded-full flex-shrink-0",
+                        o.status === "delivered" ? "bg-success-500" :
+                        o.status === "submitted" || o.status === "confirmed" ? "bg-brand-500" :
+                        o.status === "cancelled" ? "bg-danger-500" : "bg-gray-300"
+                      )} />
+                      <p className="flex-1 text-gray-700 capitalize">{o.status}</p>
+                      {o.totalAmount && (
+                        <span className="text-xs font-medium text-gray-600">€{parseFloat(o.totalAmount).toFixed(2)}</span>
+                      )}
+                      <span className="text-xs text-gray-400 flex-shrink-0">
+                        {format(new Date(o.createdAt), "d MMM yy")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            {actions.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Zap size={11} /> Actions
+                </p>
+                <div className="space-y-1.5">
+                  {actions.slice(0, 5).map((a) => (
+                    <div key={a.id} className="flex items-center gap-2.5 text-sm">
+                      {a.accepted === true
+                        ? <CheckCircle size={12} className="text-success-500 flex-shrink-0" />
+                        : a.accepted === false
+                        ? <X size={12} className="text-gray-300 flex-shrink-0" />
+                        : <span className="w-2 h-2 rounded-full bg-warning-400 flex-shrink-0" />
+                      }
+                      <p className="flex-1 text-gray-700 truncate">{a.title}</p>
+                      <span className="text-xs text-gray-400 flex-shrink-0">
+                        {format(new Date(a.createdAt), "d MMM yy")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pharmacy.visits.length === 0 && orders.length === 0 && actions.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-2">No history yet</p>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Rep info (for manager view) */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4">
@@ -243,6 +414,359 @@ function TierBadge({ tier }: { tier: string }) {
     >
       {tier}
     </span>
+  );
+}
+
+// ─── Orders tab ──────────────────────────────────────────────────────────────
+
+function OrdersTab({ pharmacyId, pharmacyName }: { pharmacyId: string; pharmacyName: string }) {
+  const [orderList, setOrderList] = useState<OrderRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/pharmacies/${pharmacyId}/orders`)
+      .then((r) => r.json())
+      .then((d) => setOrderList(d.orders ?? []))
+      .finally(() => setLoading(false));
+  }, [pharmacyId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 size={20} className="animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (orderList.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+        <ShoppingCart size={24} className="mx-auto text-gray-300 mb-3" />
+        <p className="text-gray-400 text-sm">No orders yet for {pharmacyName}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {orderList.map((order) => (
+        <OrderCard key={order.id} order={order} />
+      ))}
+    </div>
+  );
+}
+
+function OrderCard({ order }: { order: OrderRow }) {
+  const [open, setOpen] = useState(false);
+
+  const statusColor: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-600",
+    submitted: "bg-blue-50 text-blue-700",
+    confirmed: "bg-brand-50 text-brand-700",
+    delivered: "bg-success-50 text-success-700",
+    cancelled: "bg-danger-50 text-danger-700",
+  };
+
+  const isActive = order.status === "submitted" || order.status === "confirmed";
+  const isDraft = order.status === "draft";
+  const isDelivered = order.status === "delivered";
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {/* Header row */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 transition-colors"
+      >
+        <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full capitalize flex-shrink-0", statusColor[order.status] ?? "bg-gray-100 text-gray-600")}>
+          {order.status}
+        </span>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700 font-medium" suppressHydrationWarning>
+              {format(new Date(order.createdAt), "d MMM yyyy")}
+            </span>
+            {order.sourceType && (
+              <span className="text-xs text-gray-400 capitalize">{order.sourceType.replace(/_/g, " ")}</span>
+            )}
+          </div>
+          {/* Delivery line */}
+          <div className="flex items-center gap-1 mt-0.5">
+            {isDelivered && order.deliveredAt ? (
+              <p className="text-xs text-success-600 flex items-center gap-1">
+                <Truck size={10} /> Delivered {format(new Date(order.deliveredAt), "d MMM yyyy")}
+              </p>
+            ) : isActive && order.submittedAt ? (
+              <p className="text-xs text-blue-600 flex items-center gap-1">
+                <Truck size={10} /> Est. delivery {promisedDeliveryDate(order.submittedAt)}
+              </p>
+            ) : isDraft ? (
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <Package size={10} /> If submitted today: est. {promisedDeliveryDate(new Date())}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {order.totalAmount && (
+            <span className="text-sm font-semibold text-gray-800">
+              €{parseFloat(order.totalAmount).toFixed(2)}
+            </span>
+          )}
+          {open ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+        </div>
+      </button>
+
+      {/* Lines detail */}
+      {open && (
+        <div className="border-t border-gray-50 px-4 pb-4 pt-3">
+          {order.lines.length === 0 ? (
+            <p className="text-xs text-gray-400">No items</p>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-gray-400 border-b border-gray-100">
+                  <th className="text-left font-medium pb-1.5">Product</th>
+                  <th className="text-right font-medium pb-1.5 w-10">Qty</th>
+                  <th className="text-right font-medium pb-1.5 w-20">Unit</th>
+                  <th className="text-right font-medium pb-1.5 w-20">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {order.lines.map((line) => (
+                  <tr key={line.id}>
+                    <td className="py-1.5 pr-2">
+                      <p className="text-gray-800 font-medium leading-tight">{line.product.name}</p>
+                      <p className="text-gray-400 mt-0.5">{line.product.sku}</p>
+                    </td>
+                    <td className="text-right text-gray-700 py-1.5">{line.quantity}</td>
+                    <td className="text-right text-gray-600 py-1.5">
+                      {line.unitPrice ? `€${parseFloat(line.unitPrice).toFixed(2)}` : "—"}
+                    </td>
+                    <td className="text-right text-gray-800 font-medium py-1.5">
+                      {line.lineTotal ? `€${parseFloat(line.lineTotal).toFixed(2)}` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              {order.totalAmount && (
+                <tfoot>
+                  <tr className="border-t border-gray-200">
+                    <td colSpan={3} className="pt-2 text-gray-500 font-medium">Total</td>
+                    <td className="pt-2 text-right text-gray-900 font-semibold">
+                      €{parseFloat(order.totalAmount).toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Actions tab ─────────────────────────────────────────────────────────────
+
+type ActionRow = {
+  id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  aiGenerated: boolean;
+  accepted: boolean | null;
+  dueAt: Date | string | null;
+  createdAt: Date | string;
+};
+
+const ACTION_BADGE: Record<string, string> = {
+  promo: "bg-green-50 text-green-700",
+  bundle: "bg-blue-50 text-blue-700",
+  animation: "bg-purple-50 text-purple-700",
+  specialist_visit: "bg-danger-50 text-danger-700",
+  product_intro: "bg-brand-50 text-brand-700",
+  training: "bg-orange-50 text-orange-700",
+};
+
+function ActionsTab({ pharmacyId, session }: { pharmacyId: string; session: Session }) {
+  const [actionList, setActionList] = useState<ActionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [specialistRecommended, setSpecialistRecommended] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [localAccepted, setLocalAccepted] = useState<Record<string, boolean | null>>({});
+
+  useEffect(() => {
+    fetch(`/api/pharmacies/${pharmacyId}/actions`)
+      .then((r) => r.json())
+      .then((d) => {
+        setActionList(d.actions ?? []);
+        setSpecialistRecommended(d.specialistVisitRecommended ?? false);
+      })
+      .catch(() => setError("Failed to load actions"))
+      .finally(() => setLoading(false));
+  }, [pharmacyId]);
+
+  async function generate() {
+    setGenerating(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/pharmacies/${pharmacyId}/actions/generate`, { method: "POST" });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error ?? "Failed");
+      }
+      const d = await res.json();
+      setActionList((prev) => [...(d.actions ?? []), ...prev]);
+    } catch (e: unknown) {
+      setError((e as Error).message || "Failed to generate actions");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleDecision(actionId: string, accepted: boolean) {
+    setLocalAccepted((prev) => ({ ...prev, [actionId]: accepted }));
+    try {
+      await fetch(`/api/actions/${actionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted }),
+      });
+    } catch {
+      setLocalAccepted((prev) => ({ ...prev, [actionId]: null }));
+      setError("Failed to update action. Please try again.");
+    }
+  }
+
+  function getAccepted(a: ActionRow): boolean | null {
+    return a.id in localAccepted ? localAccepted[a.id] : a.accepted;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 size={20} className="animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  const pending = actionList.filter((a) => getAccepted(a) === null);
+  const accepted = actionList.filter((a) => getAccepted(a) === true);
+
+  return (
+    <div className="space-y-4">
+      {/* Specialist visit banner */}
+      {specialistRecommended && (
+        <div className="flex items-start gap-3 bg-danger-50 border border-danger-100 rounded-2xl px-4 py-3">
+          <AlertTriangle size={16} className="text-danger-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-danger-800">
+            A <strong>specialist visit</strong> is recommended for this pharmacy — shelf score is low or it has been more than 60 days since the last visit.
+          </p>
+        </div>
+      )}
+
+      {/* Pending actions */}
+      {pending.length > 0 && (
+        <div className="space-y-2">
+          {pending.map((a) => (
+            <div key={a.id} className="bg-white rounded-2xl border border-gray-100 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full capitalize", ACTION_BADGE[a.type] ?? "bg-gray-100 text-gray-600")}>
+                      {a.type.replace(/_/g, " ")}
+                    </span>
+                    {a.dueAt && (
+                      <span className="text-xs text-gray-400">
+                        Due {format(new Date(a.dueAt), "d MMM yyyy")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">{a.title}</p>
+                  {a.description && (
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{a.description}</p>
+                  )}
+                </div>
+                {session.role === "rep" && (
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => handleDecision(a.id, true)}
+                      className="flex items-center gap-1 bg-success-50 text-success-700 text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-success-100 transition-colors"
+                    >
+                      <CheckCircle size={12} /> Accept
+                    </button>
+                    <button
+                      onClick={() => handleDecision(a.id, false)}
+                      className="flex items-center gap-1 bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <X size={12} /> Dismiss
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {pending.length === 0 && accepted.length === 0 && !generating && (
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center">
+          <Sparkles size={24} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-sm text-gray-500 mb-1">No actions yet</p>
+          <p className="text-xs text-gray-400">Generate AI-powered recommendations based on this pharmacy's profile and visit history</p>
+        </div>
+      )}
+
+      {/* Accepted actions (collapsed) */}
+      {accepted.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">Accepted</p>
+          {accepted.map((a) => (
+            <div key={a.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2.5 opacity-60">
+              <CheckCircle size={14} className="text-success-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-700 truncate">{a.title}</p>
+              </div>
+              <span className={cn("text-xs px-1.5 py-0.5 rounded-full capitalize flex-shrink-0", ACTION_BADGE[a.type] ?? "bg-gray-100 text-gray-600")}>
+                {a.type.replace(/_/g, " ")}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <p className="text-xs text-danger-600">{error}</p>
+      )}
+
+      {/* Generate button — rep only */}
+      {session.role === "rep" && (
+        <button
+          onClick={generate}
+          disabled={generating}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-medium transition-colors",
+            actionList.length > 0
+              ? "border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+              : "bg-brand-600 text-white hover:bg-brand-700",
+            generating && "opacity-60 cursor-not-allowed"
+          )}
+        >
+          {generating ? (
+            <><Loader2 size={14} className="animate-spin" /> Generating actions…</>
+          ) : actionList.length > 0 ? (
+            <><RefreshCw size={14} /> Regenerate actions</>
+          ) : (
+            <><Sparkles size={14} /> Generate AI actions</>
+          )}
+        </button>
+      )}
+    </div>
   );
 }
 

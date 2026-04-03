@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export function AiBriefing({ pharmacyId }: { pharmacyId: string }) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [cachedAt, setCachedAt] = useState<Date | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  async function load() {
+  async function load(refresh = false) {
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -19,11 +21,11 @@ export function AiBriefing({ pharmacyId }: { pharmacyId: string }) {
     setError(null);
     setText("");
     setLoaded(false);
+    setCachedAt(null);
 
     try {
-      const res = await fetch(`/api/pharmacies/${pharmacyId}/briefing`, {
-        signal: controller.signal,
-      });
+      const url = `/api/pharmacies/${pharmacyId}/briefing${refresh ? "?refresh=true" : ""}`;
+      const res = await fetch(url, { signal: controller.signal });
       if (res.status === 503) {
         setError("AI briefings require an ANTHROPIC_API_KEY in your .env file.");
         setLoading(false);
@@ -31,6 +33,20 @@ export function AiBriefing({ pharmacyId }: { pharmacyId: string }) {
       }
       if (!res.ok) throw new Error("Failed to load briefing");
 
+      const isCached = res.headers.get("X-Briefing-Cached") === "true";
+      const cachedAtHeader = res.headers.get("X-Briefing-Cached-At");
+
+      if (isCached) {
+        // Non-streaming cached response
+        const body = await res.text();
+        setText(body);
+        if (cachedAtHeader) setCachedAt(new Date(cachedAtHeader));
+        setLoaded(true);
+        setLoading(false);
+        return;
+      }
+
+      // Streaming response
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       if (!reader) throw new Error("No stream");
@@ -40,6 +56,7 @@ export function AiBriefing({ pharmacyId }: { pharmacyId: string }) {
         if (done) break;
         setText((prev) => prev + decoder.decode(value, { stream: true }));
       }
+      setCachedAt(new Date());
       setLoaded(true);
     } catch (err: unknown) {
       if ((err as Error)?.name === "AbortError") return;
@@ -63,10 +80,15 @@ export function AiBriefing({ pharmacyId }: { pharmacyId: string }) {
           <p className="text-xs font-semibold text-brand-700 uppercase tracking-wide">
             AI Account Briefing
           </p>
+          {loaded && cachedAt && (
+            <span className="text-xs text-brand-400" suppressHydrationWarning>
+              · updated {formatDistanceToNow(cachedAt, { addSuffix: true })}
+            </span>
+          )}
         </div>
         {loaded && (
           <button
-            onClick={load}
+            onClick={() => load(true)}
             className="flex items-center gap-1 text-xs text-brand-500 hover:text-brand-700"
           >
             <RefreshCw size={11} /> Refresh

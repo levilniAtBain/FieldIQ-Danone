@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import type { Session } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
-import { Calendar, Package, AlertCircle, TrendingUp } from "lucide-react";
+import { Calendar, Package, AlertCircle, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 
 type KPIs = {
   visitsThisWeek: number;
@@ -26,16 +27,38 @@ type OverduePharma = {
   tier: string;
 };
 
+type OpenItems = {
+  openVisits: Array<{
+    id: string;
+    startedAt: Date | null;
+    createdAt: Date;
+    pharmacy: { id: string; name: string };
+  }>;
+  draftOrders: Array<{
+    id: string;
+    createdAt: Date;
+    pharmacy: { id: string; name: string };
+  }>;
+  pendingActions: Array<{
+    id: string;
+    createdAt: Date;
+    title: string;
+    pharmacy: { id: string; name: string };
+  }>;
+};
+
 export function DashboardView({
   user,
   todayVisits,
   overduePharma,
   kpis,
+  openItems,
 }: {
   user: Session;
   todayVisits: TodayVisit[];
   overduePharma: OverduePharma[];
   kpis: KPIs;
+  openItems: OpenItems;
 }) {
   const greeting =
     new Date().getHours() < 12
@@ -58,23 +81,47 @@ export function DashboardView({
 
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-3">
-        <KpiCard
+        <KpiCardWithItems
           label="Visits this week"
           value={String(kpis.visitsThisWeek)}
           icon={Calendar}
           color="brand"
+          openCount={openItems.openVisits.length}
+          openLabel="in progress"
+          items={openItems.openVisits.map((v) => ({
+            key: v.id,
+            name: v.pharmacy.name,
+            since: v.startedAt ?? v.createdAt,
+            href: `/pharmacies/${v.pharmacy.id}/visit/${v.id}`,
+          }))}
         />
-        <KpiCard
+        <KpiCardWithItems
           label="Orders this month"
           value={String(kpis.ordersThisMonth)}
           icon={Package}
           color="success"
+          openCount={openItems.draftOrders.length}
+          openLabel="draft"
+          items={openItems.draftOrders.map((o) => ({
+            key: o.id,
+            name: o.pharmacy.name,
+            since: o.createdAt,
+            href: `/pharmacies/${o.pharmacy.id}?tab=orders`,
+          }))}
         />
-        <KpiCard
+        <KpiCardWithItems
           label="Open actions"
           value={String(kpis.openActions)}
           icon={TrendingUp}
           color={kpis.openActions > 5 ? "warning" : "success"}
+          openCount={openItems.pendingActions.length}
+          openLabel="pending"
+          items={openItems.pendingActions.map((a) => ({
+            key: a.id,
+            name: a.pharmacy.name,
+            since: a.createdAt,
+            href: `/pharmacies/${a.pharmacy.id}?tab=actions`,
+          }))}
         />
       </div>
 
@@ -145,23 +192,38 @@ export function DashboardView({
   );
 }
 
-function KpiCard({
+type OpenItem = {
+  key: string;
+  name: string;
+  since: Date;
+  href: string;
+};
+
+function KpiCardWithItems({
   label,
   value,
   icon: Icon,
   color,
+  openCount,
+  openLabel,
+  items,
 }: {
   label: string;
   value: string;
   icon: React.ElementType;
   color: "brand" | "success" | "warning" | "danger";
+  openCount: number;
+  openLabel: string;
+  items: OpenItem[];
 }) {
+  const [expanded, setExpanded] = useState(false);
   const colorMap = {
     brand: "bg-brand-50 text-brand-600",
     success: "bg-success-50 text-success-600",
     warning: "bg-warning-50 text-warning-600",
     danger: "bg-danger-50 text-danger-600",
   };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-4">
       <div
@@ -174,6 +236,46 @@ function KpiCard({
       </div>
       <p className="text-2xl font-bold text-gray-900">{value}</p>
       <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+
+      {openCount > 0 && (
+        <div className="mt-3 border-t border-gray-50 pt-2">
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <span className="text-xs font-medium text-amber-600">
+              {openCount} {openLabel}
+            </span>
+            {expanded ? (
+              <ChevronUp size={12} className="text-gray-400" />
+            ) : (
+              <ChevronDown size={12} className="text-gray-400" />
+            )}
+          </button>
+
+          {expanded && (
+            <div className="mt-2 space-y-1.5">
+              {items.slice(0, 5).map((item) => (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className="flex items-center justify-between hover:bg-gray-50 rounded-lg px-1 py-0.5 -mx-1"
+                >
+                  <span className="text-xs text-gray-700 truncate max-w-[70%]">
+                    {item.name}
+                  </span>
+                  <span className="text-xs text-gray-400 shrink-0 ml-1" suppressHydrationWarning>
+                    {formatDistanceToNow(new Date(item.since), { addSuffix: true })}
+                  </span>
+                </Link>
+              ))}
+              {items.length > 5 && (
+                <p className="text-xs text-gray-400 px-1">+{items.length - 5} more</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

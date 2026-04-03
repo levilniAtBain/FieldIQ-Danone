@@ -380,18 +380,25 @@ function CaptureStep({
     <div className="space-y-4">
       {/* Tab switcher */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl text-xs">
-        {(["objectives", "shelf", "voice", "order", "notes"] as const).map((t) => (
+        {([
+          { id: "objectives", icon: "🎯", label: "Objectives" },
+          { id: "shelf",      icon: "📷", label: "Shelf" },
+          { id: "voice",      icon: "🎙", label: "Voice" },
+          { id: "order",      icon: "🛒", label: "Order" },
+          { id: "notes",      icon: "📝", label: "Notes" },
+        ] as const).map((t) => (
           <button
-            key={t}
-            onClick={() => setCaptureTab(t)}
+            key={t.id}
+            onClick={() => setCaptureTab(t.id)}
             className={cn(
-              "flex-1 py-2 rounded-xl transition-all font-medium",
-              captureTab === t
+              "flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl transition-all font-medium",
+              captureTab === t.id
                 ? "bg-white text-gray-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
             )}
           >
-            {t === "objectives" ? "🎯" : t === "shelf" ? "📷" : t === "voice" ? "🎙" : t === "order" ? "🛒" : "📝"}
+            <span>{t.icon}</span>
+            <span className="hidden md:block text-xs">{t.label}</span>
           </button>
         ))}
       </div>
@@ -750,12 +757,23 @@ function VoiceNoteCard({
   const [transcript, setTranscript] = useState("");
   const [summarizing, setSummarizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [addingMore, setAddingMore] = useState(false);
+  // Accumulates raw text from all recordings for combined re-summarization
+  const accumulatedRef = useRef("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
 
-  const stopRecording = useCallback(async (finalTranscript: string) => {
+  const stopRecording = useCallback(async (newTranscript: string) => {
     setRecording(false);
-    if (!finalTranscript.trim()) return;
+    if (!newTranscript.trim()) {
+      setAddingMore(false);
+      return;
+    }
+
+    // Combine with any previous recordings
+    const combined = accumulatedRef.current
+      ? accumulatedRef.current + "\n\n" + newTranscript
+      : newTranscript;
 
     setSummarizing(true);
     setError(null);
@@ -764,13 +782,15 @@ function VoiceNoteCard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          transcript: finalTranscript,
+          transcript: combined,
           pharmacyName: pharmacy.name,
         }),
       });
       if (!res.ok) throw new Error("Summarization failed");
       const data = await res.json();
+      accumulatedRef.current = combined;
       onResult(data);
+      setAddingMore(false);
     } catch {
       setError("Summarization failed. Your notes are saved as text.");
     } finally {
@@ -830,6 +850,8 @@ function VoiceNoteCard({
     recognitionRef.current?.stop();
   }
 
+  const showRecordingUI = !result || addingMore;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
       <div className="flex items-center justify-between mb-3">
@@ -853,45 +875,8 @@ function VoiceNoteCard({
         )}
       </div>
 
-      {!result && !summarizing && (
-        <div className="space-y-3">
-          <button
-            onClick={recording ? handleStop : startRecording}
-            className={cn(
-              "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-colors",
-              recording
-                ? "bg-danger-500 text-white hover:bg-danger-600"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            )}
-          >
-            {recording ? (
-              <>
-                <MicOff size={16} /> Stop recording
-              </>
-            ) : (
-              <>
-                <Mic size={16} /> Start recording
-              </>
-            )}
-          </button>
-
-          {recording && transcript && (
-            <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 max-h-24 overflow-y-auto">
-              {transcript}
-            </div>
-          )}
-        </div>
-      )}
-
-      {summarizing && (
-        <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
-          <Loader2 size={15} className="animate-spin text-brand-500" />
-          Summarizing with AI…
-        </div>
-      )}
-
       {result && (
-        <div className="space-y-3">
+        <div className="space-y-3 mb-3">
           <p className="text-sm text-gray-700">{result.summary}</p>
           {result.keyPoints.length > 0 && (
             <div>
@@ -909,6 +894,64 @@ function VoiceNoteCard({
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {showRecordingUI && !summarizing && (
+        <div className="space-y-3">
+          {addingMore && (
+            <p className="text-xs text-gray-500">Recording will be merged with previous notes.</p>
+          )}
+          <button
+            onClick={recording ? handleStop : startRecording}
+            className={cn(
+              "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-colors",
+              recording
+                ? "bg-danger-500 text-white hover:bg-danger-600"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            )}
+          >
+            {recording ? (
+              <>
+                <MicOff size={16} /> Stop recording
+              </>
+            ) : (
+              <>
+                <Mic size={16} /> {addingMore ? "Start new recording" : "Start recording"}
+              </>
+            )}
+          </button>
+
+          {recording && transcript && (
+            <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 max-h-24 overflow-y-auto">
+              {transcript}
+            </div>
+          )}
+
+          {addingMore && !recording && (
+            <button
+              onClick={() => setAddingMore(false)}
+              className="w-full text-xs text-gray-400 hover:text-gray-600 py-1"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      )}
+
+      {result && !addingMore && !summarizing && (
+        <button
+          onClick={() => setAddingMore(true)}
+          className="mt-2 flex items-center gap-1.5 text-xs text-brand-600 hover:text-brand-800 font-medium"
+        >
+          <Mic size={12} /> Add another recording
+        </button>
+      )}
+
+      {summarizing && (
+        <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+          <Loader2 size={15} className="animate-spin text-brand-500" />
+          Summarizing with AI…
         </div>
       )}
 

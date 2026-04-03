@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { pharmacies, users, visits } from "@/lib/db/schema";
-import { eq, and, desc, max } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export type PharmacyWithMeta = Awaited<
   ReturnType<typeof getPharmaciesForUser>
@@ -28,6 +28,7 @@ export async function getPharmaciesForUser(
       with: {
         rep: { columns: { id: true, name: true } },
         visits: {
+          where: eq(visits.status, "completed"),
           orderBy: [desc(visits.completedAt)],
           limit: 1,
           columns: { completedAt: true, status: true },
@@ -42,6 +43,7 @@ export async function getPharmaciesForUser(
     where: and(eq(pharmacies.repId, userId), eq(pharmacies.isActive, true)),
     with: {
       visits: {
+        where: eq(visits.status, "completed"),
         orderBy: [desc(visits.completedAt)],
         limit: 1,
         columns: { completedAt: true, status: true },

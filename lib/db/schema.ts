@@ -106,6 +106,8 @@ export const pharmacies = pgTable(
     segment: text("segment"), // e.g. "dermo-cosmetic", "beauty", "mixed"
     sfAccountId: text("sf_account_id"), // Salesforce account ID
     notes: text("notes"),
+    aiBriefingCache: text("ai_briefing_cache"),
+    aiBriefingCachedAt: timestamp("ai_briefing_cached_at"),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -320,4 +322,12 @@ export const orderLinesRelations = relations(orderLines, ({ one }) => ({
     fields: [orderLines.productId],
     references: [products.id],
   }),
+}));
+
+export const actionsRelations = relations(actions, ({ one }) => ({
+  pharmacy: one(pharmacies, {
+    fields: [actions.pharmacyId],
+    references: [pharmacies.id],
+  }),
+  rep: one(users, { fields: [actions.repId], references: [users.id] }),
 }));

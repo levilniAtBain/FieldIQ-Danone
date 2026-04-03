@@ -17,6 +17,7 @@ import {
   FileText,
   Search,
   X,
+  RefreshCw,
 } from "lucide-react";
 
 export type OrderLine = {
@@ -77,6 +78,9 @@ export function OrderBuilder({
   const [totalAmount, setTotalAmount] = useState(existingOrderTotal ?? 0);
   const [error, setError] = useState<string | null>(null);
 
+  // Reorder
+  const [reordering, setReordering] = useState(false);
+
   // Manual product search
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,6 +93,30 @@ export function OrderBuilder({
   // Submit
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // ── Reorder from last visit ─────────────────────────────────────────────
+  async function handleReorder() {
+    setReordering(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/visits/${visitId}/reorder`, { method: "POST" });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error ?? "Failed to load last order");
+      }
+      const data = await res.json();
+      setOrderId(data.orderId);
+      setLines(data.lines);
+      setSummary(data.summary);
+      setWarnings(data.warnings ?? []);
+      setTotalAmount(data.totalAmount);
+      setStep("review");
+    } catch (e: unknown) {
+      setError((e as Error).message || "Could not load previous order.");
+    } finally {
+      setReordering(false);
+    }
+  }
 
   // ── Manual product search ───────────────────────────────────────────────
   const searchProducts = useCallback((q: string) => {
@@ -364,6 +392,26 @@ export function OrderBuilder({
           />
         </div>
 
+        {/* Reorder divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
+          <div className="relative flex justify-center">
+            <span className="bg-gray-50 px-3 text-xs text-gray-400">or start from a previous order</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleReorder}
+          disabled={reordering || building}
+          className="w-full flex items-center justify-center gap-2 border border-gray-200 bg-white text-gray-700 font-medium py-3 rounded-2xl hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors text-sm"
+        >
+          {reordering ? (
+            <><Loader2 size={14} className="animate-spin" /> Loading last order…</>
+          ) : (
+            <><RefreshCw size={14} /> Reorder from last visit</>
+          )}
+        </button>
+
         {error && (
           <p className="text-xs text-danger-600 flex items-center gap-1">
             <AlertCircle size={12} /> {error}
@@ -372,7 +420,7 @@ export function OrderBuilder({
 
         <button
           onClick={buildOrder}
-          disabled={building || (!voiceTranscript && !typedNotes && scannedItems.length === 0)}
+          disabled={building || reordering || (!voiceTranscript && !typedNotes && scannedItems.length === 0)}
           className="w-full flex items-center justify-center gap-2 bg-brand-600 text-white font-medium py-3 rounded-2xl hover:bg-brand-700 disabled:opacity-50 transition-colors"
         >
           {building ? (

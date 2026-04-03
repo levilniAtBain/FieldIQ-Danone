@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/auth/session";
 import {
@@ -35,14 +35,8 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const nav = session.role === "manager" ? managerNav : repNav;
 
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -67,13 +61,13 @@ export function AppShell({
           <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 text-sm font-semibold flex items-center justify-center">
             {session.name.charAt(0).toUpperCase()}
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          <Link
+            href="/login"
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex items-center"
             title="Sign out"
           >
             <LogOut size={16} />
-          </button>
+          </Link>
         </div>
       </header>
 

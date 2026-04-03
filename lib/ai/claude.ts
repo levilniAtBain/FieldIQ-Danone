@@ -606,3 +606,91 @@ Return JSON only:
     throw new Error("Failed to parse objectives evaluation");
   }
 }
+
+// ─── Next Best Actions ────────────────────────────────────────────────────────
+
+export type NextBestAction = {
+  type: "promo" | "bundle" | "animation" | "specialist_visit" | "product_intro" | "training";
+  title: string;
+  description: string;
+  dueAt: string | null;
+};
+
+export interface NextBestActionsContext {
+  pharmacyName: string;
+  city: string;
+  tier: string;
+  segment: string | null;
+  currentDate: string;
+  season: string;
+  lastVisitDate: string | null;
+  daysSinceLastVisit: number | null;
+  lastVisitNotes: string | null;
+  shelfScore: number | null;
+  shelfSummary: string | null;
+  visitCount: number;
+  previouslyAcceptedActions: string[];
+  specialistVisitNeeded: boolean;
+}
+
+export async function generateNextBestActions(
+  context: NextBestActionsContext
+): Promise<NextBestAction[]> {
+  const prompt = `You are a field sales intelligence assistant for L'Oréal. Generate 3-5 next best actions for a pharmacy sales rep.
+
+Account context:
+- Pharmacy: ${context.pharmacyName}, ${context.city}
+- Tier: ${context.tier}
+- Segment: ${context.segment ?? "general"}
+- Date: ${context.currentDate} (${context.season} season)
+- Last visit: ${context.lastVisitDate ?? "never"}${context.daysSinceLastVisit !== null ? ` (${context.daysSinceLastVisit} days ago)` : ""}
+- Last visit notes: ${context.lastVisitNotes ?? "none"}
+- Shelf score: ${context.shelfScore !== null ? `${context.shelfScore}/10` : "not assessed"}
+- Shelf summary: ${context.shelfSummary ?? "not available"}
+- Total visits: ${context.visitCount}
+- Previously accepted actions (do not repeat): ${context.previouslyAcceptedActions.join("; ") || "none"}
+${context.specialistVisitNeeded ? "- IMPORTANT: A specialist visit is strongly recommended (shelf score below 6 or >60 days since last visit or never visited)" : ""}
+
+Available action types:
+- "promo": Promotional offer to present (seasonal campaigns, volume discounts)
+- "bundle": Bundle deal proposal (multi-product packaging)
+- "animation": In-store animation or display event
+- "specialist_visit": Schedule a dermatologist or specialist visit to support the pharmacy team
+- "product_intro": Introduce a new L'Oréal product range (Vichy, CeraVe, La Roche-Posay, SkinCeuticals, SkinBetter, Mixa, NYX, Biotherm, Medik8)
+- "training": Training session for pharmacy staff on product knowledge
+
+Instructions:
+1. Prioritise actions relevant to the ${context.season} season (spring = sun care, skin renewal; summer = sun protection; autumn = hydration, repair; winter = rich moisturisers, lip care)
+2. Higher-tier accounts (platinum/gold) should receive higher-value, more strategic actions
+3. If shelf score is below 6 or not assessed, prioritise a specialist_visit action
+4. Suggest concrete, named L'Oréal products where relevant
+5. If dueAt is relevant, suggest a date within the next 30-60 days in ISO format (YYYY-MM-DD), otherwise null
+${context.specialistVisitNeeded ? "6. MUST include at least one specialist_visit action" : ""}
+
+Return a JSON array only — no markdown, no explanation:
+[
+  {
+    "type": "promo",
+    "title": "Spring Sun Care Launch — Vichy Capital Soleil",
+    "description": "Present the new Vichy Capital Soleil UV-Age Daily SPF50+ ahead of summer. Pharmacy eligible for 15% launch discount on first order of 12+ units.",
+    "dueAt": "2026-04-30"
+  }
+]`;
+
+  const response = await client.messages.create({
+    model: "claude-opus-4-6",
+    max_tokens: 1200,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No response from actions generation");
+  }
+
+  try {
+    return JSON.parse(extractJson(textBlock.text)) as NextBestAction[];
+  } catch {
+    throw new Error("Failed to parse next best actions");
+  }
+}
