@@ -28,6 +28,7 @@ const managerNav = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/team", label: "My Team", icon: Users },
   { href: "/pharmacies", label: "Pharmacies", icon: Building2 },
+  { href: "/master-plan", label: "Plan", icon: CalendarRange },
   { href: "/catalog", label: "Catalog", icon: Package },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
 ];

@@ -73,7 +73,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 type Section = "planning" | "coordination" | "exchange";
 
-export function MasterPlanDetailView({ entry: initialEntry }: { entry: Entry }) {
+export function MasterPlanDetailView({ entry: initialEntry, readOnly = false }: { entry: Entry; readOnly?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromPharmacy = searchParams.get("from") === "pharmacy";
@@ -142,25 +142,27 @@ export function MasterPlanDetailView({ entry: initialEntry }: { entry: Entry }) 
               {format(new Date(entry.plannedDate), "EEEE d MMMM yyyy · HH:mm", { locale: fr })}
             </p>
           </div>
-          <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
-            {entry.status !== "completed" && (
+          {!readOnly && (
+            <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
+              {entry.status !== "completed" && (
+                <button
+                  onClick={() => setStatus(entry.status === "draft" ? "confirmed" : "completed")}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+                >
+                  <CheckCircle size={13} />
+                  {entry.status === "draft" ? "Confirmer" : "Marquer réalisé"}
+                </button>
+              )}
               <button
-                onClick={() => setStatus(entry.status === "draft" ? "confirmed" : "completed")}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border border-danger-200 text-danger-600 hover:bg-danger-50 transition-colors"
               >
-                <CheckCircle size={13} />
-                {entry.status === "draft" ? "Confirmer" : "Marquer réalisé"}
+                {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                Supprimer
               </button>
-            )}
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border border-danger-200 text-danger-600 hover:bg-danger-50 transition-colors"
-            >
-              {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-              Supprimer
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -184,13 +186,13 @@ export function MasterPlanDetailView({ entry: initialEntry }: { entry: Entry }) 
 
       {/* Sections */}
       {activeSection === "planning" && (
-        <PlanningSection entry={entry} pharmacyId={entry.pharmacy.id} onUpdate={(fields) => {
+        <PlanningSection entry={entry} pharmacyId={entry.pharmacy.id} readOnly={readOnly} onUpdate={(fields) => {
           setEntry((e) => ({ ...e, ...fields }));
           patch(fields);
         }} />
       )}
       {activeSection === "coordination" && (
-        <CoordinationSection entry={entry} onUpdate={async (action) => {
+        <CoordinationSection entry={entry} readOnly={readOnly} onUpdate={async (action) => {
           const res = await fetch(`/api/master-plan/${entry.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -203,7 +205,7 @@ export function MasterPlanDetailView({ entry: initialEntry }: { entry: Entry }) 
         }} />
       )}
       {activeSection === "exchange" && (
-        <ExchangeSection entry={entry} onUpdate={(fields) => {
+        <ExchangeSection entry={entry} readOnly={readOnly} onUpdate={(fields) => {
           setEntry((e) => ({ ...e, ...fields }));
           patch(fields);
         }} />
@@ -226,10 +228,12 @@ const ACTION_BADGE: Record<string, string> = {
 function PlanningSection({
   entry,
   pharmacyId,
+  readOnly,
   onUpdate,
 }: {
   entry: Entry;
   pharmacyId: string;
+  readOnly: boolean;
   onUpdate: (fields: Partial<Entry>) => void;
 }) {
   const [objectives, setObjectives] = useState(entry.objectives ?? "");
@@ -317,6 +321,7 @@ function PlanningSection({
                           <SpecialistCoordPanel
                             action={a as ActionForCoord}
                             pharmacyId={pharmacyId}
+                            readOnly={readOnly}
                             onUpdate={(updated) => {
                               setActions((prev) =>
                                 prev.map((x) => x.id === a.id ? { ...x, ...updated } : x)
@@ -371,26 +376,34 @@ function PlanningSection({
         </div>
 
       <SectionCard title="Objectifs de la visite" icon="🎯">
-        <textarea
-          value={objectives}
-          onChange={(e) => { setObjectives(e.target.value); setDirty(true); }}
-          placeholder="Quels sont les objectifs de cette visite ? (ex: présenter nouveau produit, auditer le rayon, vérifier la mise en place promo…)"
-          className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-24 placeholder:text-gray-300"
-          rows={4}
-        />
+        {readOnly ? (
+          <p className="text-sm text-gray-700 whitespace-pre-line">{objectives || <span className="italic text-gray-400">Non renseigné</span>}</p>
+        ) : (
+          <textarea
+            value={objectives}
+            onChange={(e) => { setObjectives(e.target.value); setDirty(true); }}
+            placeholder="Quels sont les objectifs de cette visite ? (ex: présenter nouveau produit, auditer le rayon, vérifier la mise en place promo…)"
+            className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-24 placeholder:text-gray-300"
+            rows={4}
+          />
+        )}
       </SectionCard>
 
       <SectionCard title="Points clés d'attention" icon="⚠️">
-        <textarea
-          value={keyPoints}
-          onChange={(e) => { setKeyPoints(e.target.value); setDirty(true); }}
-          placeholder="Quels sont les points d'attention particuliers ? (ex: concurrent à surveiller, rupture de stock connue, relation pharmacien délicate…)"
-          className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-24 placeholder:text-gray-300"
-          rows={4}
-        />
+        {readOnly ? (
+          <p className="text-sm text-gray-700 whitespace-pre-line">{keyPoints || <span className="italic text-gray-400">Non renseigné</span>}</p>
+        ) : (
+          <textarea
+            value={keyPoints}
+            onChange={(e) => { setKeyPoints(e.target.value); setDirty(true); }}
+            placeholder="Quels sont les points d'attention particuliers ? (ex: concurrent à surveiller, rupture de stock connue, relation pharmacien délicate…)"
+            className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-24 placeholder:text-gray-300"
+            rows={4}
+          />
+        )}
       </SectionCard>
 
-      {dirty && (
+      {!readOnly && dirty && (
         <button
           onClick={save}
           className="flex items-center gap-2 bg-brand-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-brand-700"
@@ -406,9 +419,11 @@ function PlanningSection({
 
 function CoordinationSection({
   entry,
+  readOnly,
   onUpdate,
 }: {
   entry: Entry;
+  readOnly: boolean;
   onUpdate: (action: object) => Promise<void>;
 }) {
   const [adding, setAdding] = useState<"mv" | "merchandiser" | null>(null);
@@ -442,12 +457,14 @@ function CoordinationSection({
       return (
         <div className="flex items-center justify-between py-2">
           <span className="text-sm text-gray-400">{roleLabel} — non assigné</span>
-          <button
-            onClick={() => { setAdding(role); setNewName(""); setNewNotes(""); }}
-            className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 font-medium"
-          >
-            <Plus size={12} /> Ajouter
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => { setAdding(role); setNewName(""); setNewNotes(""); }}
+              className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 font-medium"
+            >
+              <Plus size={12} /> Ajouter
+            </button>
+          )}
         </div>
       );
     }
@@ -465,20 +482,29 @@ function CoordinationSection({
             <span className="text-xs text-gray-400">{roleLabel}</span>
           </div>
           {cv.notes && <p className="text-xs text-gray-500 mt-0.5">{cv.notes}</p>}
-          <button
-            onClick={() => toggleConfirmed(cv)}
-            className={cn(
-              "flex items-center gap-1 text-xs mt-1 font-medium",
-              cv.confirmed ? "text-success-600" : "text-gray-400 hover:text-gray-600"
-            )}
-          >
-            {cv.confirmed ? <CheckCircle size={12} /> : <Circle size={12} />}
-            {cv.confirmed ? "Présence confirmée" : "Confirmer présence"}
-          </button>
+          {readOnly ? (
+            <p className={cn("flex items-center gap-1 text-xs mt-1 font-medium", cv.confirmed ? "text-success-600" : "text-gray-400")}>
+              {cv.confirmed ? <CheckCircle size={12} /> : <Circle size={12} />}
+              {cv.confirmed ? "Présence confirmée" : "Non confirmé"}
+            </p>
+          ) : (
+            <button
+              onClick={() => toggleConfirmed(cv)}
+              className={cn(
+                "flex items-center gap-1 text-xs mt-1 font-medium",
+                cv.confirmed ? "text-success-600" : "text-gray-400 hover:text-gray-600"
+              )}
+            >
+              {cv.confirmed ? <CheckCircle size={12} /> : <Circle size={12} />}
+              {cv.confirmed ? "Présence confirmée" : "Confirmer présence"}
+            </button>
+          )}
         </div>
-        <button onClick={() => removeCoVisitor(cv.id)} className="text-gray-300 hover:text-danger-400 flex-shrink-0">
-          <X size={14} />
-        </button>
+        {!readOnly && (
+          <button onClick={() => removeCoVisitor(cv.id)} className="text-gray-300 hover:text-danger-400 flex-shrink-0">
+            <X size={14} />
+          </button>
+        )}
       </div>
     );
   }
@@ -487,7 +513,7 @@ function CoordinationSection({
     <div className="space-y-4">
       <SectionCard title="Visiteur Médical (MV)" icon="👨‍⚕️">
         <CoVisitorCard cv={mvVisitor} roleLabel="Visiteur Médical" role="mv" />
-        {adding === "mv" && (
+        {!readOnly && adding === "mv" && (
           <AddCoVisitorForm
             roleLabel="Visiteur Médical"
             name={newName}
@@ -503,7 +529,7 @@ function CoordinationSection({
 
       <SectionCard title="Merchandiser" icon="🏪">
         <CoVisitorCard cv={merchandiser} roleLabel="Merchandiser" role="merchandiser" />
-        {adding === "merchandiser" && (
+        {!readOnly && adding === "merchandiser" && (
           <AddCoVisitorForm
             roleLabel="Merchandiser"
             name={newName}
@@ -585,9 +611,11 @@ function AddCoVisitorForm({
 
 function ExchangeSection({
   entry,
+  readOnly,
   onUpdate,
 }: {
   entry: Entry;
+  readOnly: boolean;
   onUpdate: (fields: Partial<Entry>) => void;
 }) {
   const [repTakeaways, setRepTakeaways] = useState(entry.repTakeaways ?? "");
@@ -631,30 +659,38 @@ function ExchangeSection({
       <div className="space-y-3">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Key takeaways post-visite</p>
 
-        <SectionCard title="Compte-rendu du Pharma Partner (vous)" icon="👤">
-          <textarea
-            value={repTakeaways}
-            onChange={(e) => { setRepTakeaways(e.target.value); setDirty(true); }}
-            placeholder="Votre bilan : ce que vous avez observé, ce qui a bien marché, les actions prises…"
-            className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-20 placeholder:text-gray-300"
-            rows={3}
-          />
+        <SectionCard title="Compte-rendu du Pharma Partner" icon="👤">
+          {readOnly ? (
+            <p className="text-sm text-gray-700 whitespace-pre-line">{repTakeaways || <span className="italic text-gray-400">Non renseigné</span>}</p>
+          ) : (
+            <textarea
+              value={repTakeaways}
+              onChange={(e) => { setRepTakeaways(e.target.value); setDirty(true); }}
+              placeholder="Votre bilan : ce que vous avez observé, ce qui a bien marché, les actions prises…"
+              className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-20 placeholder:text-gray-300"
+              rows={3}
+            />
+          )}
         </SectionCard>
 
         <SectionCard
           title={mvVisitor ? `Bilan MV — ${mvVisitor.name}` : "Bilan Visiteur Médical (MV)"}
           icon="👨‍⚕️"
           empty={!mvVisitor}
-          emptyMsg="Ajoutez un MV dans l'onglet Coordination pour activer cette section"
+          emptyMsg="Aucun MV assigné pour cette visite"
         >
           {mvVisitor && (
-            <textarea
-              value={mvTakeaways}
-              onChange={(e) => { setMvTakeaways(e.target.value); setDirty(true); }}
-              placeholder="Ce que le MV a retenu de la visite, les opportunités identifiées, les recommandations à pousser auprès du pharmacien…"
-              className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-20 placeholder:text-gray-300"
-              rows={3}
-            />
+            readOnly ? (
+              <p className="text-sm text-gray-700 whitespace-pre-line">{mvTakeaways || <span className="italic text-gray-400">Non renseigné</span>}</p>
+            ) : (
+              <textarea
+                value={mvTakeaways}
+                onChange={(e) => { setMvTakeaways(e.target.value); setDirty(true); }}
+                placeholder="Ce que le MV a retenu de la visite, les opportunités identifiées, les recommandations à pousser auprès du pharmacien…"
+                className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-20 placeholder:text-gray-300"
+                rows={3}
+              />
+            )
           )}
         </SectionCard>
 
@@ -662,21 +698,25 @@ function ExchangeSection({
           title={merchandiser ? `Bilan Merchandiser — ${merchandiser.name}` : "Bilan Merchandiser"}
           icon="🏪"
           empty={!merchandiser}
-          emptyMsg="Ajoutez un Merchandiser dans l'onglet Coordination pour activer cette section"
+          emptyMsg="Aucun Merchandiser assigné pour cette visite"
         >
           {merchandiser && (
-            <textarea
-              value={merchandiserTakeaways}
-              onChange={(e) => { setMerchandiserTakeaways(e.target.value); setDirty(true); }}
-              placeholder="Observations du merchandiser : état du rayon, actions merchandising réalisées, recommandations…"
-              className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-20 placeholder:text-gray-300"
-              rows={3}
-            />
+            readOnly ? (
+              <p className="text-sm text-gray-700 whitespace-pre-line">{merchandiserTakeaways || <span className="italic text-gray-400">Non renseigné</span>}</p>
+            ) : (
+              <textarea
+                value={merchandiserTakeaways}
+                onChange={(e) => { setMerchandiserTakeaways(e.target.value); setDirty(true); }}
+                placeholder="Observations du merchandiser : état du rayon, actions merchandising réalisées, recommandations…"
+                className="w-full text-sm text-gray-700 resize-none outline-none leading-relaxed min-h-20 placeholder:text-gray-300"
+                rows={3}
+              />
+            )
           )}
         </SectionCard>
       </div>
 
-      {dirty && (
+      {!readOnly && dirty && (
         <button
           onClick={save}
           className="flex items-center gap-2 bg-brand-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-brand-700"

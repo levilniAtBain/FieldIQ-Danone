@@ -38,10 +38,12 @@ export function SpecialistCoordPanel({
   action,
   pharmacyId,
   onUpdate,
+  readOnly = false,
 }: {
   action: ActionForCoord;
   pharmacyId: string;
   onUpdate: (updated: Partial<ActionForCoord>) => void;
+  readOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
@@ -142,12 +144,14 @@ export function SpecialistCoordPanel({
             {format(new Date(action.scheduledVisitDate), "d MMM yyyy · HH:mm")}
           </span>
         )}
-        <button
-          onClick={open ? () => setOpen(false) : openPanel}
-          className="text-xs text-brand-600 hover:text-brand-800 font-medium"
-        >
-          {open ? "Fermer" : specialist ? "Modifier" : "Coordonner →"}
-        </button>
+        {!readOnly && (
+          <button
+            onClick={open ? () => setOpen(false) : openPanel}
+            className="text-xs text-brand-600 hover:text-brand-800 font-medium"
+          >
+            {open ? "Fermer" : specialist ? "Modifier" : "Coordonner →"}
+          </button>
+        )}
       </div>
 
       {/* Coordination form */}
