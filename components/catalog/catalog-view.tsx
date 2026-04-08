@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, ExternalLink, Play, Package } from "lucide-react";
+import { Search, X, ExternalLink, Play, Package, Pencil, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Product = {
@@ -74,14 +74,20 @@ export function CatalogView({
   initialProducts: Product[];
   categories: string[];
 }) {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
 
+  function handleProductUpdate(id: string, patch: Partial<Product>) {
+    setProducts((prev) => prev.map((p) => p.id === id ? { ...p, ...patch } : p));
+    setSelected((prev) => prev?.id === id ? { ...prev, ...patch } : prev);
+  }
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return initialProducts.filter((p) => {
+    return products.filter((p) => {
       if (q && !p.name.toLowerCase().includes(q) &&
           !p.sku.toLowerCase().includes(q) &&
           !p.brand.toLowerCase().includes(q) &&
@@ -91,7 +97,7 @@ export function CatalogView({
       if (categoryFilter.length > 0 && !categoryFilter.includes(p.category)) return false;
       return true;
     });
-  }, [initialProducts, search, brandFilter, categoryFilter]);
+  }, [products, search, brandFilter, categoryFilter]);
 
   // Group by brand for display
   const grouped = useMemo(() => {
@@ -246,15 +252,65 @@ export function CatalogView({
 
       {/* Product detail modal */}
       {selected && (
-        <ProductModal product={selected} onClose={() => setSelected(null)} />
+        <ProductModal
+          product={selected}
+          onClose={() => setSelected(null)}
+          onUpdate={(patch) => handleProductUpdate(selected.id, patch)}
+        />
       )}
     </div>
   );
 }
 
-function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
+function ProductModal({
+  product,
+  onClose,
+  onUpdate,
+}: {
+  product: Product;
+  onClose: () => void;
+  onUpdate: (patch: Partial<Product>) => void;
+}) {
   const embedUrl = product.videoUrl ? getVideoEmbedUrl(product.videoUrl) : null;
   const directVideo = product.videoUrl && isDirectVideo(product.videoUrl);
+
+  const [editing, setEditing] = useState(false);
+  const [imageUrlDraft, setImageUrlDraft] = useState(product.imageUrl ?? "");
+  const [videoUrlDraft, setVideoUrlDraft] = useState(product.videoUrl ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: imageUrlDraft.trim() || null,
+          videoUrl: videoUrlDraft.trim() || null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      onUpdate({
+        imageUrl: imageUrlDraft.trim() || null,
+        videoUrl: videoUrlDraft.trim() || null,
+      });
+      setEditing(false);
+    } catch {
+      setSaveError("Erreur lors de la sauvegarde.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCancelEdit() {
+    setImageUrlDraft(product.imageUrl ?? "");
+    setVideoUrlDraft(product.videoUrl ?? "");
+    setSaveError(null);
+    setEditing(false);
+  }
 
   return (
     <div
@@ -287,15 +343,26 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
 
         <div className="p-5 space-y-4">
           {/* Header */}
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", BRAND_COLORS[product.brand] ?? BRAND_COLORS.other)}>
-                {brandLabel(product.brand)}
-              </span>
-              <span className="text-xs text-gray-400 capitalize">{product.category}</span>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", BRAND_COLORS[product.brand] ?? BRAND_COLORS.other)}>
+                  {brandLabel(product.brand)}
+                </span>
+                <span className="text-xs text-gray-400 capitalize">{product.category}</span>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">{product.name}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">SKU: {product.sku}</p>
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">{product.name}</h2>
-            <p className="text-xs text-gray-400 mt-0.5">SKU: {product.sku}</p>
+            {!editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 flex-shrink-0 mt-1"
+                title="Modifier les médias"
+              >
+                <Pencil size={13} /> Médias
+              </button>
+            )}
           </div>
 
           {/* Price */}
@@ -314,18 +381,70 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             </div>
           )}
 
+          {/* Media edit form */}
+          {editing && (
+            <div className="bg-gray-50 rounded-2xl p-4 space-y-3 border border-gray-100">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Modifier les médias</p>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Lien image</label>
+                <input
+                  type="url"
+                  value={imageUrlDraft}
+                  onChange={(e) => setImageUrlDraft(e.target.value)}
+                  placeholder="https://…"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Lien vidéo</label>
+                <input
+                  type="url"
+                  value={videoUrlDraft}
+                  onChange={(e) => setVideoUrlDraft(e.target.value)}
+                  placeholder="YouTube, Vimeo ou lien direct…"
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+                />
+                <p className="text-xs text-gray-400 mt-1">YouTube, Vimeo, ou fichier .mp4 — laissez vide pour supprimer</p>
+              </div>
+              {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+              <div className="flex gap-2 justify-end">
+                <button onClick={handleCancelEdit} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700">
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-1.5 bg-brand-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-brand-700 disabled:opacity-60"
+                >
+                  {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Video */}
-          {product.videoUrl && (
+          {product.videoUrl && !editing && (
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Vidéo</p>
               {embedUrl ? (
-                <div className="rounded-xl overflow-hidden aspect-video">
-                  <iframe
-                    src={embedUrl}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                <div className="space-y-2">
+                  <div className="rounded-xl overflow-hidden aspect-video">
+                    <iframe
+                      src={embedUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  <a
+                    href={product.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-brand-600"
+                  >
+                    <ExternalLink size={12} /> Ouvrir dans un nouvel onglet
+                  </a>
                 </div>
               ) : directVideo ? (
                 <video
@@ -339,7 +458,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
                   href={product.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-brand-600 hover:underline"
+                  className="flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-800"
                 >
                   <Play size={14} /> Voir la vidéo ↗
                 </a>
