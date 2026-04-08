@@ -11,12 +11,16 @@ import {
   BarChart2,
   Users,
   LogOut,
+  Package,
+  CalendarRange,
 } from "lucide-react";
 
 const repNav = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/pharmacies", label: "Pharmacies", icon: Building2 },
   { href: "/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/catalog", label: "Catalog", icon: Package },
+  { href: "/master-plan", label: "Plan", icon: CalendarRange },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
 ];
 
@@ -24,6 +28,7 @@ const managerNav = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/team", label: "My Team", icon: Users },
   { href: "/pharmacies", label: "Pharmacies", icon: Building2 },
+  { href: "/catalog", label: "Catalog", icon: Package },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
 ];
 

@@ -34,6 +34,7 @@ export async function GET(
   const rows = await db.query.actions.findMany({
     where: eq(actions.pharmacyId, id),
     orderBy: [desc(actions.createdAt)],
+    with: { specialist: true },
   });
 
   return NextResponse.json({

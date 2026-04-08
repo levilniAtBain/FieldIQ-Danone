@@ -6,7 +6,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/auth/session";
-import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink, Sparkles, CheckCircle, X, AlertTriangle, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Zap, Truck, Package } from "lucide-react";
+import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink, Sparkles, CheckCircle, X, AlertTriangle, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Zap, Truck, Package, CalendarRange, ChevronRight, Stethoscope } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { SpecialistCoordPanel, SPECIALIST_STATUS_LABEL, type Specialist, type ActionForCoord } from "@/components/shared/specialist-coord-panel";
+import { VISIT_TYPE_OPTIONS } from "@/lib/visit-types";
 import { AiBriefing } from "./ai-briefing";
 
 type Visit = {
@@ -33,7 +36,15 @@ type Pharmacy = {
   visits: Visit[];
 };
 
-type Tab = "overview" | "visits" | "orders" | "actions";
+type Tab = "overview" | "visits" | "orders" | "actions" | "master-plan";
+
+const TAB_LABEL: Record<Tab, string> = {
+  overview: "Overview",
+  visits: "Visits",
+  orders: "Orders",
+  actions: "Actions",
+  "master-plan": "Plan",
+};
 
 export function PharmacyDetailView({
   pharmacy,
@@ -45,6 +56,10 @@ export function PharmacyDetailView({
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab | null) ?? "overview";
   const [tab, setTab] = useState<Tab>(initialTab);
+
+  const tabs: Tab[] = session.role === "rep"
+    ? ["overview", "visits", "orders", "actions", "master-plan"]
+    : ["overview", "visits", "orders", "actions"];
 
   return (
     <div className="space-y-5">
@@ -102,19 +117,19 @@ export function PharmacyDetailView({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl">
-        {(["overview", "visits", "orders", "actions"] as Tab[]).map((t) => (
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl overflow-x-auto">
+        {tabs.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "flex-1 py-2 text-sm rounded-xl transition-all capitalize",
+              "flex-1 py-2 text-sm rounded-xl transition-all whitespace-nowrap",
               tab === t
                 ? "bg-white text-gray-900 font-medium shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
             )}
           >
-            {t}
+            {TAB_LABEL[t]}
           </button>
         ))}
       </div>
@@ -127,6 +142,9 @@ export function PharmacyDetailView({
       )}
       {tab === "actions" && (
         <ActionsTab pharmacyId={pharmacy.id} session={session} />
+      )}
+      {tab === "master-plan" && (
+        <MasterPlanTab pharmacyId={pharmacy.id} pharmacyName={pharmacy.name} onNavigateToActions={() => setTab("actions")} />
       )}
     </div>
   );
@@ -580,6 +598,12 @@ type ActionRow = {
   accepted: boolean | null;
   dueAt: Date | string | null;
   createdAt: Date | string;
+  // Specialist coordination
+  assignedSpecialistId: string | null;
+  scheduledVisitDate: Date | string | null;
+  specialistStatus: "pending" | "contacted" | "confirmed" | null;
+  specialistNotes: string | null;
+  specialist: Specialist | null;
 };
 
 const ACTION_BADGE: Record<string, string> = {
@@ -765,6 +789,401 @@ function ActionsTab({ pharmacyId, session }: { pharmacyId: string; session: Sess
             <><Sparkles size={14} /> Generate AI actions</>
           )}
         </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Master Plan tab ─────────────────────────────────────────────────────────
+
+type PlanEntry = {
+  id: string;
+  plannedDate: Date | string;
+  status: string;
+  objectives: string | null;
+  coVisitors: { id: string; role: string; name: string; confirmed: boolean }[];
+};
+
+const PLAN_STATUS_COLOR: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-600",
+  confirmed: "bg-blue-50 text-blue-700",
+  completed: "bg-success-50 text-success-700",
+};
+const PLAN_STATUS_LABEL: Record<string, string> = {
+  draft: "Brouillon",
+  confirmed: "Confirmé",
+  completed: "Réalisé",
+};
+
+function MasterPlanTab({ pharmacyId, pharmacyName, onNavigateToActions }: { pharmacyId: string; pharmacyName: string; onNavigateToActions: () => void }) {
+  const router = useRouter();
+  const [entries, setEntries] = useState<PlanEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [plannedDate, setPlannedDate] = useState("");
+  const [visitType, setVisitType] = useState<string>("follow_up");
+  const [specialistList, setSpecialistList] = useState<{ id: string; name: string; role: string; territory: string | null; hasVisited?: boolean }[]>([]);
+  const [loadingSpecialists, setLoadingSpecialists] = useState(false);
+  const [selectedSpecialistId, setSelectedSpecialistId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Actions panel
+  const [planActions, setPlanActions] = useState<ActionRow[]>([]);
+  const [actionsLoading, setActionsLoading] = useState(true);
+
+  function loadActions(silent = false) {
+    if (!silent) setActionsLoading(true);
+    fetch(`/api/pharmacies/${pharmacyId}/actions`)
+      .then((r) => r.json())
+      .then((d) => setPlanActions(d.actions ?? []))
+      .finally(() => setActionsLoading(false));
+  }
+
+  useEffect(() => {
+    fetch(`/api/pharmacies/${pharmacyId}/master-plan`)
+      .then((r) => r.json())
+      .then((d) => setEntries(d.entries ?? []))
+      .finally(() => setLoading(false));
+    loadActions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pharmacyId]);
+
+  function handleVisitTypeChange(value: string) {
+    setVisitType(value);
+    setSelectedSpecialistId("");
+    const opt = VISIT_TYPE_OPTIONS.find((o) => o.value === value);
+    if (opt?.specialistRole && specialistList.length === 0) {
+      setLoadingSpecialists(true);
+      fetch(`/api/specialists?role=${opt.specialistRole}&pharmacyId=${pharmacyId}`)
+        .then((r) => r.json())
+        .then((d) => setSpecialistList(d.specialists ?? []))
+        .finally(() => setLoadingSpecialists(false));
+    }
+  }
+
+  async function handleCreate() {
+    if (!plannedDate) { setError("Sélectionnez une date."); return; }
+    setCreating(true);
+    setError(null);
+    try {
+      const opt = VISIT_TYPE_OPTIONS.find((o) => o.value === visitType);
+      const specialist = opt?.specialistRole ? specialistList.find((s) => s.id === selectedSpecialistId) : null;
+      const res = await fetch("/api/master-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pharmacyId,
+          plannedDate: new Date(plannedDate).toISOString(),
+          visitType,
+          ...(specialist ? { specialistName: specialist.name, specialistRole: opt!.specialistRole } : {}),
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const { id } = await res.json();
+      router.push(`/master-plan/${id}?from=pharmacy`);
+    } catch {
+      setError("Erreur lors de la création.");
+      setCreating(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 size={20} className="animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  // Actions that require a visit (all except promo/bundle)
+  const visitActionTypes = new Set(["specialist_visit", "animation", "product_intro", "training"]);
+  const visitCoordActions = planActions.filter((a) => a.accepted === true && visitActionTypes.has(a.type));
+  const acceptedOtherActions = planActions.filter((a) => a.accepted === true && !visitActionTypes.has(a.type));
+  const pendingPlanActions = planActions.filter((a) => a.accepted === null);
+  const dismissedPlanActions = planActions.filter((a) => a.accepted === false);
+
+  const refreshBtn = (
+    <button
+      onClick={() => loadActions(true)}
+      disabled={actionsLoading}
+      className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-600 transition-colors disabled:opacity-40"
+    >
+      <RefreshCw size={12} className={actionsLoading ? "animate-spin" : ""} />
+      Actualiser
+    </button>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Visits to coordinate — all non-promo/bundle accepted actions */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+            <Stethoscope size={12} /> Visites à coordonner
+          </p>
+          {refreshBtn}
+        </div>
+        {actionsLoading ? (
+          <div className="flex items-center gap-2 py-1">
+            <Loader2 size={13} className="animate-spin text-gray-300" />
+            <span className="text-xs text-gray-400">Chargement…</span>
+          </div>
+        ) : visitCoordActions.length === 0 ? (
+          <p className="text-xs text-gray-400 italic">
+            Aucune visite à coordonner. Acceptez des actions dans l&apos;onglet{" "}
+            <button onClick={onNavigateToActions} className="font-semibold text-brand-600 hover:underline">Actions</button>.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {visitCoordActions.map((a) => (
+              <div key={a.id}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded-full capitalize", ACTION_BADGE[a.type] ?? "bg-gray-100 text-gray-600")}>
+                    {a.type.replace(/_/g, " ")}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-gray-800">{a.title}</p>
+                {a.description && <p className="text-xs text-gray-400 mt-0.5">{a.description}</p>}
+                <SpecialistCoordPanel action={a} pharmacyId={pharmacyId} onUpdate={(updated) => {
+                  setPlanActions((prev) => prev.map((x) => x.id === a.id ? { ...x, ...updated } : x));
+                }} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Promo/bundle actions + pending */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 mb-3">
+          <Zap size={12} /> Promos &amp; bundles décidés
+        </p>
+        {actionsLoading ? (
+          <div className="flex items-center gap-2 py-1">
+            <Loader2 size={13} className="animate-spin text-gray-300" />
+            <span className="text-xs text-gray-400">Chargement…</span>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {acceptedOtherActions.length === 0 && pendingPlanActions.length === 0 && dismissedPlanActions.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">Aucune action promo/bundle.</p>
+            ) : (
+              <>
+                {acceptedOtherActions.map((a) => (
+                  <div key={a.id} className="flex items-center gap-2">
+                    <CheckCircle size={12} className="text-success-500 flex-shrink-0" />
+                    <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded-full capitalize flex-shrink-0", ACTION_BADGE[a.type] ?? "bg-gray-100 text-gray-600")}>
+                      {a.type.replace(/_/g, " ")}
+                    </span>
+                    <span className="text-xs text-gray-700 truncate flex-1">{a.title}</span>
+                  </div>
+                ))}
+                {pendingPlanActions.length > 0 && (
+                  <button
+                    onClick={onNavigateToActions}
+                    className="text-xs text-brand-600 hover:text-brand-800 hover:underline pt-1 block"
+                  >
+                    + {pendingPlanActions.length} action{pendingPlanActions.length > 1 ? "s" : ""} en attente de décision →
+                  </button>
+                )}
+                {dismissedPlanActions.length > 0 && (
+                  <div className="pt-1 border-t border-gray-100 space-y-1">
+                    {dismissedPlanActions.map((a) => (
+                      <div key={a.id} className="flex items-center gap-2 opacity-40">
+                        <X size={12} className="text-gray-400 flex-shrink-0" />
+                        <span className="text-xs text-gray-500 line-through truncate flex-1">{a.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Visites planifiées</p>
+        <button
+          onClick={() => { setShowNew(true); setError(null); }}
+          className="flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-800"
+        >
+          <Plus size={13} /> Planifier une co-visite
+        </button>
+      </div>
+
+      {/* New plan form */}
+      {showNew && (
+        <div className="bg-white rounded-2xl border border-brand-100 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-gray-900">Nouvelle visite — {pharmacyName}</p>
+            <button onClick={() => setShowNew(false)}><X size={15} className="text-gray-400" /></button>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-2 block">Type de visite</label>
+            <div className="grid grid-cols-1 gap-1.5">
+              {VISIT_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleVisitTypeChange(opt.value)}
+                  className={cn(
+                    "flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left text-sm transition-colors",
+                    visitType === opt.value
+                      ? cn(opt.color, "border-current font-medium")
+                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                  )}
+                >
+                  <span>{opt.icon}</span>
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+              {/* Specialist selector for MV/Merchandising types */}
+              {VISIT_TYPE_OPTIONS.find((o) => o.value === visitType)?.specialistRole && (
+                <div className="mt-1">
+                  {loadingSpecialists ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 size={13} className="animate-spin text-gray-400" />
+                      <span className="text-xs text-gray-400">Chargement des spécialistes…</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedSpecialistId}
+                      onChange={(e) => setSelectedSpecialistId(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                      <option value="">Sélectionner un spécialiste… (optionnel)</option>
+                      {specialistList.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.hasVisited ? "★ " : ""}{s.name}{` · ${s.role === "mv" ? "MV" : "Merchandiser"}`}{s.territory ? ` — ${s.territory}` : ""}{s.hasVisited ? " (déjà venu)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">Date de visite</label>
+            <input
+              type="datetime-local"
+              value={plannedDate}
+              onChange={(e) => setPlannedDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+          {error && <p className="text-xs text-danger-600">{error}</p>}
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setShowNew(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">
+              Annuler
+            </button>
+            <button
+              onClick={handleCreate}
+              disabled={creating}
+              className="flex items-center gap-1.5 bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-brand-700 disabled:opacity-60"
+            >
+              {creating && <Loader2 size={13} className="animate-spin" />}
+              Créer et planifier
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Visit items — from all accepted visit-type actions */}
+      {visitCoordActions.map((a) => {
+        const specStatus = a.specialistStatus ?? "pending";
+        const statusColor = {
+          pending: "bg-gray-100 text-gray-500",
+          contacted: "bg-amber-50 text-amber-700",
+          confirmed: "bg-success-50 text-success-700",
+        }[specStatus];
+        const statusLabel = { pending: "À planifier", contacted: "Contacté", confirmed: "Confirmé" }[specStatus];
+        return (
+          <div key={a.id} className="bg-white rounded-2xl border border-red-100 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-11 text-center">
+                {a.scheduledVisitDate ? (
+                  <>
+                    <p className="text-lg font-bold text-gray-900 leading-none" suppressHydrationWarning>
+                      {format(new Date(a.scheduledVisitDate), "d")}
+                    </p>
+                    <p className="text-xs text-gray-400 uppercase" suppressHydrationWarning>
+                      {format(new Date(a.scheduledVisitDate), "MMM")}
+                    </p>
+                  </>
+                ) : (
+                  <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-red-50">
+                    <Stethoscope size={16} className="text-red-400" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", statusColor)}>
+                    {statusLabel}
+                  </span>
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-red-50 text-red-700">
+                    Visite Spécialiste
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{a.title}</p>
+                {a.specialist && (
+                  <p className="text-xs text-gray-500 mt-0.5">{a.specialist.name}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Master plan entries */}
+      {entries.length === 0 && !showNew && visitCoordActions.length === 0 && (
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
+          <CalendarRange size={24} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-sm text-gray-500 mb-1">Aucune visite planifiée pour {pharmacyName}</p>
+          <p className="text-xs text-gray-400">Créez un plan pour coordonner votre prochaine visite</p>
+        </div>
+      )}
+
+      {entries.length > 0 && (
+        <div className="space-y-2">
+          {entries.map((e) => (
+            <Link
+              key={e.id}
+              href={`/master-plan/${e.id}?from=pharmacy`}
+              className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 p-4 hover:border-brand-200 hover:shadow-sm transition-all"
+            >
+              <div className="flex-shrink-0 w-11 text-center">
+                <p className="text-lg font-bold text-gray-900 leading-none" suppressHydrationWarning>
+                  {format(new Date(e.plannedDate), "d")}
+                </p>
+                <p className="text-xs text-gray-400 uppercase" suppressHydrationWarning>
+                  {format(new Date(e.plannedDate), "MMM")}
+                </p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", PLAN_STATUS_COLOR[e.status] ?? PLAN_STATUS_COLOR.draft)}>
+                    {PLAN_STATUS_LABEL[e.status] ?? e.status}
+                  </span>
+                  {e.coVisitors.length > 0 && (
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <CalendarRange size={10} />
+                      {e.coVisitors.length} co-visiteur{e.coVisitors.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                {e.objectives && (
+                  <p className="text-xs text-gray-500 truncate mt-0.5">{e.objectives}</p>
+                )}
+              </div>
+              <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );

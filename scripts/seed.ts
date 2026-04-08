@@ -287,6 +287,58 @@ async function main() {
     },
   ]);
 
+  // ── Specialists ────────────────────────────────────────────────────────────
+  await db.insert(schema.specialists).values([
+    {
+      name: "Dr. Sophie Renard",
+      email: "s.renard@loreal-medical.com",
+      phone: "06 12 34 56 78",
+      role: "mv" as const,
+      territory: "Paris 1er–8e",
+      notes: "Spécialiste CeraVe & La Roche-Posay. Disponible lundi et mercredi.",
+    },
+    {
+      name: "Dr. Antoine Lefevre",
+      email: "a.lefevre@loreal-medical.com",
+      phone: "06 23 45 67 89",
+      role: "mv" as const,
+      territory: "Paris 9e–20e & Banlieue Est",
+      notes: "Spécialiste Vichy & SkinCeuticals. Préfère les visites le matin.",
+    },
+    {
+      name: "Dr. Claire Moreau",
+      email: "c.moreau@loreal-medical.com",
+      phone: "06 34 56 78 90",
+      role: "mv" as const,
+      territory: "Hauts-de-Seine & Val-de-Marne",
+      notes: "Spécialiste Medik8 & SkinBetter. Bilingue français/anglais.",
+    },
+    {
+      name: "Lucas Fontaine",
+      email: "l.fontaine@loreal-merch.com",
+      phone: "06 45 67 89 01",
+      role: "merchandiser" as const,
+      territory: "Paris Rive Droite",
+      notes: "Expert mise en rayon & planogramme. Disponible du lundi au vendredi.",
+    },
+    {
+      name: "Amélie Girard",
+      email: "a.girard@loreal-merch.com",
+      phone: "06 56 78 90 12",
+      role: "merchandiser" as const,
+      territory: "Paris Rive Gauche & Banlieue Sud",
+      notes: "Spécialiste animations en pharmacie. Certifiée Visual Merchandising.",
+    },
+    {
+      name: "Karim Benali",
+      email: "k.benali@loreal-merch.com",
+      phone: "06 67 89 01 23",
+      role: "merchandiser" as const,
+      territory: "Île-de-France Nord & Est",
+      notes: "Expert implantation et audit rayon dermo-cosmétique.",
+    },
+  ]);
+
   console.log("✅ Seed complete!");
   console.log("\n📋 Test credentials:");
   console.log("  Manager: marie.dupont@loreal.com / password123");

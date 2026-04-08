@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       target: production
     ports:
-      - "3020:3000"   # Direct access on same machine: http://localhost:3020
+      - "3020:3020"   # Direct access on same machine: http://localhost:3020
     volumes:
       - uploads:/app/uploads
     environment:
@@ -43,7 +43,7 @@ services:
 
   # ─── Caddy (HTTPS for camera/mic on tablets over LAN) ───────────────────
   # Use https://<your-LAN-IP>:8443 from a tablet on the same network.
-  # On your own laptop, use http://localhost:3000 instead (no Caddy needed).
+  # On your own laptop, use http://localhost:3020 instead (no Caddy needed).
   caddy:
     image: caddy:2-alpine
     ports:

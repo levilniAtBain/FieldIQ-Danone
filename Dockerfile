@@ -7,7 +7,7 @@ FROM base AS development
 COPY package.json package-lock.json* ./
 RUN npm ci
 COPY . .
-EXPOSE 3000
+EXPOSE 3020
 CMD ["npm", "run", "dev"]
 
 # ─── Builder ──────────────────────────────────────────────────────────────────
@@ -31,6 +31,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 RUN mkdir -p /app/uploads
 
 # Fix volume ownership at startup, then run as nextjs
-EXPOSE 3000
-ENV PORT=3000 HOSTNAME="0.0.0.0"
+EXPOSE 3020
+ENV PORT=3020 HOSTNAME="0.0.0.0"
 CMD ["sh", "-c", "chown -R nextjs:nodejs /app/uploads && exec node server.js"]

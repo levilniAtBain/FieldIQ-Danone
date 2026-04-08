@@ -14,10 +14,15 @@
       "Read(//opt/homebrew/**)",
       "Bash(python3 import/generate_sql.py)",
       "Bash(curl -s \"http://localhost:3020/api/products/search?q=vichy\")",
-      "Bash(ls /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies/[id]/)"
+      "Bash(ls /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies/[id]/)",
+      "Bash(npx tsc:*)",
+      "Bash(docker exec:*)",
+      "Bash(DATABASE_URL=postgresql://fieldiq:fieldiq@localhost:5444/fieldiq npx tsx scripts/seed-specialists.ts)"
     ],
     "additionalDirectories": [
-      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/files"
+      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/files",
+      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/master-plan",
+      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/(app)/master-plan"
     ]
   }
 }

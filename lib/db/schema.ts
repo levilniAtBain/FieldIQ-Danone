@@ -38,6 +38,14 @@ export const orderStatusEnum = pgEnum("order_status", [
   "cancelled",
 ]);
 
+export const specialistStatusEnum = pgEnum("specialist_status", [
+  "pending",
+  "contacted",
+  "confirmed",
+]);
+
+export const coVisitRoleEnum = pgEnum("co_visit_role", ["mv", "merchandiser"]);
+
 export const actionTypeEnum = pgEnum("action_type", [
   "promo",
   "bundle",
@@ -61,6 +69,17 @@ export const brandEnum = pgEnum("brand", [
 ]);
 
 // ─── Tables ──────────────────────────────────────────────────────────────────
+
+export const specialists = pgTable("specialists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  role: coVisitRoleEnum("role").notNull(),
+  territory: text("territory"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 export const regions = pgTable("regions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -178,6 +197,7 @@ export const products = pgTable(
     description: text("description"),
     imageUrl: text("image_url"),
     productUrl: text("product_url"),
+    videoUrl: text("video_url"),
     unitPrice: decimal("unit_price", { precision: 10, scale: 2 }),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -245,9 +265,66 @@ export const actions = pgTable(
     dueAt: timestamp("due_at"),
     completedAt: timestamp("completed_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // Specialist coordination (for specialist_visit type)
+    assignedSpecialistId: uuid("assigned_specialist_id").references(() => specialists.id),
+    scheduledVisitDate: timestamp("scheduled_visit_date"),
+    specialistStatus: specialistStatusEnum("specialist_status").default("pending"),
+    specialistNotes: text("specialist_notes"),
   },
   (t) => [index("actions_pharmacy_idx").on(t.pharmacyId)]
 );
+
+// ─── Master Plan ─────────────────────────────────────────────────────────────
+
+export const masterPlanStatusEnum = pgEnum("master_plan_status", [
+  "draft",
+  "confirmed",
+  "completed",
+]);
+
+export const visitTypeEnum = pgEnum("visit_type", [
+  "follow_up",
+  "specialist_mv",
+  "specialist_merchandising",
+  "presentation",
+]);
+
+export const masterPlanEntries = pgTable(
+  "master_plan_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    repId: uuid("rep_id").notNull().references(() => users.id),
+    pharmacyId: uuid("pharmacy_id").notNull().references(() => pharmacies.id),
+    plannedDate: timestamp("planned_date").notNull(),
+    status: masterPlanStatusEnum("status").notNull().default("draft"),
+    visitType: visitTypeEnum("visit_type").default("follow_up"),
+    // Pre-visit shared content
+    objectives: text("objectives"),
+    keyAttentionPoints: text("key_attention_points"),
+    // Post-visit takeaways
+    repTakeaways: text("rep_takeaways"),
+    mvTakeaways: text("mv_takeaways"),
+    merchandiserTakeaways: text("merchandiser_takeaways"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("master_plan_rep_idx").on(t.repId),
+    index("master_plan_pharmacy_idx").on(t.pharmacyId),
+  ]
+);
+
+export const masterPlanCoVisitors = pgTable("master_plan_co_visitors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  masterPlanId: uuid("master_plan_id")
+    .notNull()
+    .references(() => masterPlanEntries.id, { onDelete: "cascade" }),
+  role: coVisitRoleEnum("role").notNull(),
+  name: text("name").notNull(),
+  confirmed: boolean("confirmed").notNull().default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // ─── Sales data (imported / synced from Salesforce or ERP) ───────────────────
 
@@ -324,10 +401,31 @@ export const orderLinesRelations = relations(orderLines, ({ one }) => ({
   }),
 }));
 
+export const specialistsRelations = relations(specialists, ({ many }) => ({
+  actions: many(actions),
+}));
+
 export const actionsRelations = relations(actions, ({ one }) => ({
   pharmacy: one(pharmacies, {
     fields: [actions.pharmacyId],
     references: [pharmacies.id],
   }),
   rep: one(users, { fields: [actions.repId], references: [users.id] }),
+  specialist: one(specialists, {
+    fields: [actions.assignedSpecialistId],
+    references: [specialists.id],
+  }),
+}));
+
+export const masterPlanEntriesRelations = relations(masterPlanEntries, ({ one, many }) => ({
+  rep: one(users, { fields: [masterPlanEntries.repId], references: [users.id] }),
+  pharmacy: one(pharmacies, { fields: [masterPlanEntries.pharmacyId], references: [pharmacies.id] }),
+  coVisitors: many(masterPlanCoVisitors),
+}));
+
+export const masterPlanCoVisitorsRelations = relations(masterPlanCoVisitors, ({ one }) => ({
+  masterPlan: one(masterPlanEntries, {
+    fields: [masterPlanCoVisitors.masterPlanId],
+    references: [masterPlanEntries.id],
+  }),
 }));

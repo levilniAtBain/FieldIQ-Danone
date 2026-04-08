@@ -655,7 +655,7 @@ Available action types:
 - "promo": Promotional offer to present (seasonal campaigns, volume discounts)
 - "bundle": Bundle deal proposal (multi-product packaging)
 - "animation": In-store animation or display event
-- "specialist_visit": Schedule a dermatologist or specialist visit to support the pharmacy team
+- "specialist_visit": Schedule a visit from an L'Oréal product specialist (MV — Visiteur Médical) to support the pharmacy team with product expertise and shelf assessment
 - "product_intro": Introduce a new L'Oréal product range (Vichy, CeraVe, La Roche-Posay, SkinCeuticals, SkinBetter, Mixa, NYX, Biotherm, Medik8)
 - "training": Training session for pharmacy staff on product knowledge
 
