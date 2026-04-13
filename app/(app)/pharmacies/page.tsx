@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { PharmaciesView } from "@/components/pharmacies/pharmacies-view";
 import { getPharmaciesForUser } from "@/lib/db/queries/pharmacies";
@@ -22,7 +23,7 @@ export default async function PharmaciesPage({
   searchParams: Promise<{ rep?: string }>;
 }) {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const { rep: filterRepId } = await searchParams;
 

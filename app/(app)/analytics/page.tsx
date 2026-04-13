@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { AnalyticsView } from "@/components/analytics/analytics-view";
 import { db } from "@/lib/db";
@@ -7,7 +8,7 @@ import { subMonths, format } from "date-fns";
 
 export default async function AnalyticsPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const sixMonthsAgo = subMonths(new Date(), 6);
 

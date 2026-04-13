@@ -8,7 +8,7 @@ import { MasterPlanManagerView } from "@/components/master-plan/master-plan-mana
 
 export default async function MasterPlanPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   if (session.role === "manager") {
     const manager = await db.query.users.findFirst({

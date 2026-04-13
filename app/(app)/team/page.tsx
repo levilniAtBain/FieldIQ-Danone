@@ -5,7 +5,7 @@ import { getManagerTeamStats } from "@/lib/db/queries/dashboard";
 
 export default async function TeamPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
   if (session.role !== "manager") redirect("/dashboard");
 
   const reps = await getManagerTeamStats(session.userId);

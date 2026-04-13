@@ -54,9 +54,13 @@ export async function loginAction(
     .sign(JWT_SECRET);
 
   const cookieStore = await cookies();
+  const secureCookie =
+    process.env.NODE_ENV === "production" &&
+    process.env.COOKIE_SECURE !== "false";
+
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7,
     path: "/",

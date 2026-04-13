@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { CatalogView } from "@/components/catalog/catalog-view";
 import { db } from "@/lib/db";
@@ -7,7 +8,7 @@ import { sql } from "drizzle-orm";
 
 export default async function CatalogPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   // Load initial full catalog server-side
   const allProducts = await db

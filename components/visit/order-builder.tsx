@@ -178,7 +178,7 @@ export function OrderBuilder({
     const rec = new SR() as any;
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = "en-US";
+    rec.lang = "fr-FR";
     let full = existingVoiceTranscript ?? "";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rec.onresult = (e: any) => {
@@ -420,7 +420,7 @@ export function OrderBuilder({
 
         <button
           onClick={buildOrder}
-          disabled={building || reordering || (!voiceTranscript && !typedNotes && scannedItems.length === 0)}
+          disabled={building || reordering}
           className="w-full flex items-center justify-center gap-2 bg-brand-600 text-white font-medium py-3 rounded-2xl hover:bg-brand-700 disabled:opacity-50 transition-colors"
         >
           {building ? (

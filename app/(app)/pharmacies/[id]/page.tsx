@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { PharmacyDetailView } from "@/components/pharmacies/pharmacy-detail-view";
 import {
@@ -13,7 +13,7 @@ export default async function PharmacyDetailPage({
 }) {
   const { id } = await params;
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const [pharmacy, hasAccess] = await Promise.all([
     getPharmacyById(id),

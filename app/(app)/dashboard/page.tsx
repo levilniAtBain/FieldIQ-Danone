@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { ManagerDashboardView } from "@/components/dashboard/manager-dashboard-view";
@@ -12,7 +13,7 @@ import {
 
 export default async function DashboardPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   if (session.role === "manager") {
     const [kpis, teamStats] = await Promise.all([

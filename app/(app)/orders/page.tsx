@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { OrdersView } from "@/components/orders/orders-view";
 import { db } from "@/lib/db";
@@ -6,7 +7,7 @@ import { eq, desc } from "drizzle-orm";
 
 export default async function OrdersPage() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const rows = await db.query.orders.findMany({
     where: eq(orders.repId, session.userId),

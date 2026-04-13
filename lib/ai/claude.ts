@@ -410,7 +410,7 @@ Return JSON only — no markdown:
 
   const response = await client.messages.create({
     model: "claude-opus-4-6",
-    max_tokens: 1200,
+    max_tokens: 4000,
     messages: [{ role: "user", content: prompt }],
   });
 
@@ -424,6 +424,7 @@ Return JSON only — no markdown:
   try {
     return JSON.parse(raw) as AiOrderResult;
   } catch {
+    console.error("Failed to parse AI order response. Raw text:", textBlock.text.slice(0, 500));
     throw new Error("Failed to parse AI order response");
   }
 }

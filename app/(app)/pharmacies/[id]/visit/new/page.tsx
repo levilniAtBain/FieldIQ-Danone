@@ -11,7 +11,7 @@ export default async function NewVisitPage({
   const { id } = await params;
 
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
   if (session.role !== "rep") redirect(`/pharmacies/${id}`);
 
   const [pharmacy, hasAccess] = await Promise.all([

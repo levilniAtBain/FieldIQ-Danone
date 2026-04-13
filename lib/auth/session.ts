@@ -7,6 +7,11 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET ?? "dev-secret-change-in-production-32chars!!"
 );
 
+// Allow disabling secure cookies for local network dev (iOS self-signed cert)
+const SECURE_COOKIE =
+  process.env.NODE_ENV === "production" &&
+  process.env.COOKIE_SECURE !== "false";
+
 export type Session = {
   userId: string;
   email: string;
@@ -27,7 +32,7 @@ export async function createSession(
 
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: SECURE_COOKIE,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: "/",
@@ -50,7 +55,7 @@ export async function getSession(): Promise<Session | null> {
 export function clearSession(response: NextResponse): void {
   response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: SECURE_COOKIE,
     sameSite: "lax",
     maxAge: 0,
     path: "/",

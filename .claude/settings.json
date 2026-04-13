@@ -17,13 +17,19 @@
       "Bash(ls /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies/[id]/)",
       "Bash(npx tsc:*)",
       "Bash(docker exec:*)",
-      "Bash(DATABASE_URL=postgresql://fieldiq:fieldiq@localhost:5444/fieldiq npx tsx scripts/seed-specialists.ts)"
+      "Bash(DATABASE_URL=postgresql://fieldiq:fieldiq@localhost:5444/fieldiq npx tsx scripts/seed-specialists.ts)",
+      "Bash(ipconfig getifaddr:*)",
+      "Bash(docker cp:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3020/icon-192.png)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3020/icon-512.png)"
     ],
     "additionalDirectories": [
       "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/files",
       "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/master-plan",
       "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/(app)/master-plan",
-      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/products"
+      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/products",
+      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/(app)/master-plan/[id]",
+      "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/(app)/pharmacies/[id]"
     ]
   }
 }

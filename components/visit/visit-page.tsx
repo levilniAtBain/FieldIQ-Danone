@@ -853,7 +853,7 @@ function VoiceNoteCard({
     const recognition = new SpeechRecognitionAPI() as any;
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = "fr-FR";
 
     let fullTranscript = "";
 

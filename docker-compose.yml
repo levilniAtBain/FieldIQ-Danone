@@ -14,6 +14,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production-32chars!!}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - NODE_ENV=production
+      # Disable secure-only cookies so iOS devices on LAN can log in via Caddy's self-signed HTTPS
+      - COOKIE_SECURE=false
       # Corporate SSL proxy fix — allows outbound HTTPS to api.anthropic.com
       - NODE_TLS_REJECT_UNAUTHORIZED=0
     depends_on:

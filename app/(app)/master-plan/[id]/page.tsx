@@ -12,7 +12,7 @@ export default async function MasterPlanDetailPage({
 }) {
   const { id } = await params;
   const session = await getSession();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   if (session.role === "manager") {
     // Fetch the entry without repId restriction
