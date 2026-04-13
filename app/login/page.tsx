@@ -6,9 +6,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-600 text-white text-2xl font-bold mb-4">
-            FQ
-          </div>
+          <img src="/field_iq_logo.svg" className="h-20 w-auto rounded-xl mx-auto mb-4" alt="FieldIQ" />
           <h1 className="text-2xl font-semibold text-gray-900">FieldIQ</h1>
           <p className="text-sm text-gray-500 mt-1">
             L&apos;Oréal Field Force · Pharmacy Sales

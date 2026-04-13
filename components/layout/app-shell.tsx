@@ -49,9 +49,7 @@ export function AppShell({
       {/* Top header */}
       <header className="bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand-600 text-white text-xs font-bold flex items-center justify-center">
-            FQ
-          </div>
+          <img src="/field_iq_logo.svg" className="h-8 w-auto rounded" alt="FieldIQ" />
           <span className="font-semibold text-gray-900 text-sm hidden sm:block">
             FieldIQ
           </span>
@@ -80,6 +78,10 @@ export function AppShell({
       {/* Main content — body scrolls, no overflow-auto here (breaks iOS touch events) */}
       <main className="pt-0 pb-20 md:pb-8 md:pl-56">
         <div className="max-w-6xl mx-auto p-4 md:p-6">{children}</div>
+        {/* Logo footer — visible on mobile only (desktop has it in the side nav) */}
+        <div className="flex justify-center pb-4 md:hidden px-8">
+          <img src="/field_iq_logo.svg" className="w-full max-w-xs h-auto rounded-xl" alt="FieldIQ" />
+        </div>
       </main>
 
       {/* Bottom tab bar (mobile/tablet) */}
@@ -124,6 +126,10 @@ export function AppShell({
             </Link>
           );
         })}
+        {/* Logo at bottom of side nav */}
+        <div className="mt-auto pt-4 pb-2">
+          <img src="/field_iq_logo.svg" className="w-full h-auto" alt="FieldIQ" />
+        </div>
       </nav>
     </div>
   );
