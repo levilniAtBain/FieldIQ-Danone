@@ -384,6 +384,48 @@ export const visitStockLines = pgTable("visit_stock_lines", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ─── Perfect Store ────────────────────────────────────────────────────────────
+
+export const perfectStoreVisits = pgTable(
+  "perfect_store_visits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pharmacyId: uuid("pharmacy_id").notNull().references(() => pharmacies.id, { onDelete: "cascade" }),
+    repId: uuid("rep_id").notNull().references(() => users.id),
+    visitDate: timestamp("visit_date").defaultNow().notNull(),
+    checklistJson: jsonb("checklist_json").$type<Record<string, string[]>>(),
+    kpisJson: jsonb("kpis_json").$type<Record<string, {
+      shareOfShelf: number | null;
+      extraDisplay: number | null;
+      coreOnShelfAvailability: number | null;
+      numberOfFacings: number | null;
+      qualityOfPositioning: number | null;
+      shareOfAssortment: number | null;
+    } | null>>(),
+    picosScore: integer("picos_score"),
+    aiSummary: text("ai_summary"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("ps_visits_pharmacy_idx").on(t.pharmacyId),
+    index("ps_visits_rep_idx").on(t.repId),
+  ]
+);
+
+export const perfectStoreFiles = pgTable("perfect_store_files", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  psVisitId: uuid("ps_visit_id").notNull().references(() => perfectStoreVisits.id, { onDelete: "cascade" }),
+  pharmacyId: uuid("pharmacy_id").notNull().references(() => pharmacies.id),
+  shelfSection: text("shelf_section").notNull(), // "main" | "brand" | "solar" | "deodorant"
+  storagePath: text("storage_path").notNull(),
+  mimeType: text("mime_type"),
+  sizeBytes: integer("size_bytes"),
+  aiAnalysisJson: jsonb("ai_analysis_json"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -476,4 +518,15 @@ export const visitStockLinesRelations = relations(visitStockLines, ({ one }) => 
   visit: one(visits, { fields: [visitStockLines.visitId], references: [visits.id] }),
   pharmacy: one(pharmacies, { fields: [visitStockLines.pharmacyId], references: [pharmacies.id] }),
   product: one(products, { fields: [visitStockLines.productId], references: [products.id] }),
+}));
+
+export const perfectStoreVisitsRelations = relations(perfectStoreVisits, ({ one, many }) => ({
+  pharmacy: one(pharmacies, { fields: [perfectStoreVisits.pharmacyId], references: [pharmacies.id] }),
+  rep: one(users, { fields: [perfectStoreVisits.repId], references: [users.id] }),
+  files: many(perfectStoreFiles),
+}));
+
+export const perfectStoreFilesRelations = relations(perfectStoreFiles, ({ one }) => ({
+  psVisit: one(perfectStoreVisits, { fields: [perfectStoreFiles.psVisitId], references: [perfectStoreVisits.id] }),
+  pharmacy: one(pharmacies, { fields: [perfectStoreFiles.pharmacyId], references: [pharmacies.id] }),
 }));

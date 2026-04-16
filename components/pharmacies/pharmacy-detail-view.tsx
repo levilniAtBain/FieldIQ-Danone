@@ -14,6 +14,7 @@ import { AiBriefing } from "./ai-briefing";
 import { SegmentBadge } from "@/components/shared/segment-badge";
 import { PharmacyAnalyticsTab } from "./pharmacy-analytics-tab";
 import { PharmacySegmentation } from "./pharmacy-segmentation";
+import { PharmacyPerfectStoreTab } from "./pharmacy-perfect-store-tab";
 
 type Visit = {
   id: string;
@@ -43,10 +44,11 @@ type Pharmacy = {
   visits: Visit[];
 };
 
-type Tab = "overview" | "visits" | "orders" | "actions" | "analytics" | "master-plan";
+type Tab = "overview" | "perfect-store" | "visits" | "orders" | "actions" | "analytics" | "master-plan";
 
 const TAB_LABEL: Record<Tab, string> = {
   overview: "Overview",
+  "perfect-store": "Perfect Store",
   visits: "Visits",
   orders: "Orders",
   actions: "Actions",
@@ -66,8 +68,8 @@ export function PharmacyDetailView({
   const [tab, setTab] = useState<Tab>(initialTab);
 
   const tabs: Tab[] = session.role === "rep"
-    ? ["overview", "visits", "orders", "actions", "analytics", "master-plan"]
-    : ["overview", "visits", "orders", "actions", "analytics"];
+    ? ["overview", "perfect-store", "visits", "orders", "actions", "analytics", "master-plan"]
+    : ["overview", "perfect-store", "visits", "orders", "actions", "analytics"];
 
   return (
     <div className="space-y-5">
@@ -152,6 +154,9 @@ export function PharmacyDetailView({
 
       {/* Tab content */}
       {tab === "overview" && <OverviewTab pharmacy={pharmacy} />}
+      {tab === "perfect-store" && (
+        <PharmacyPerfectStoreTab pharmacyId={pharmacy.id} session={session} />
+      )}
       {tab === "visits" && <VisitsTab visits={pharmacy.visits} pharmacyId={pharmacy.id} session={session} />}
       {tab === "orders" && (
         <OrdersTab pharmacyId={pharmacy.id} pharmacyName={pharmacy.name} />

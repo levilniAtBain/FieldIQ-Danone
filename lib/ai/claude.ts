@@ -829,3 +829,139 @@ Return a JSON array only — no markdown, no explanation:
     throw new Error("Failed to parse next best actions");
   }
 }
+
+// ─── Perfect Store shelf analysis ────────────────────────────────────────────
+
+export type PerfectStoreKpis = {
+  shareOfShelf: number | null;        // 0-100 %
+  extraDisplay: number | null;        // count of secondary display locations
+  coreOnShelfAvailability: number | null; // 0-100 %
+  numberOfFacings: number | null;     // total facings visible
+  qualityOfPositioning: number | null; // 1-10 score
+  shareOfAssortment: number | null;   // 0-100 %
+};
+
+export type PerfectStoreAnalysisResult = {
+  // Inherited from standard shelf analysis
+  stockouts: string[];
+  lowStock: string[];
+  competitorPresence: string[];
+  planogramIssues: string[];
+  recommendations: string[];
+  overallScore: number; // 1-10
+  summary: string;
+  // Perfect Store specific
+  kpis: PerfectStoreKpis;
+  checklistSuggestions: string[]; // sub-item IDs from checklist.ts the AI believes are satisfied
+};
+
+export async function analyzePerfectStoreShelf(
+  imageBase64: string,
+  mimeType: "image/jpeg" | "image/png" | "image/webp",
+  shelfSection: "main" | "brand" | "solar" | "deodorant",
+  pharmacyContext: { name: string; tier: string; segment: string | null }
+): Promise<PerfectStoreAnalysisResult> {
+  const sectionLabel = {
+    main: "Main/Integrated shelf",
+    brand: "Brand-dedicated shelf",
+    solar: "Solar/Sun care shelf",
+    deodorant: "Deodorant shelf",
+  }[shelfSection];
+
+  // Sub-item IDs that are relevant to this section for AI to suggest
+  const relevantSubItemIds = {
+    main: [
+      "item_1_lipikar","item_1_effaclar","item_1_cerave","item_1_vichy",
+      "item_2_share60","item_2_eyelevel","item_2_blocking","item_2_tn",
+      "item_7_2m","item_8_pos2","item_8_price",
+    ],
+    brand: [
+      "item_1_lipikar","item_1_effaclar","item_1_cerave","item_1_vichy",
+      "item_2_b_larger","item_2_b_atpar","item_2_b_smaller","item_2_b_noshelf",
+      "item_2_share60","item_2_eyelevel","item_2_blocking","item_2_tn",
+    ],
+    solar: [
+      "item_2_s_share60","item_2_s_eyelevel","item_2_s_blocking","item_2_s_tn",
+      "item_3_topseller","item_3_crosscat","item_3_nocompetition",
+      "item_4_topseller","item_4_crosscat","item_4_nocompetition",
+      "item_5_topseller","item_5_crosscat","item_5_nocompetition",
+    ],
+    deodorant: [
+      "item_2_d_share60","item_2_d_eyelevel","item_2_d_blocking","item_2_d_tn",
+      "item_3_topseller","item_3_crosscat","item_3_nocompetition",
+      "item_4_topseller","item_4_crosscat","item_4_nocompetition",
+      "item_5_topseller","item_5_crosscat","item_5_nocompetition",
+    ],
+  }[shelfSection];
+
+  const response = await client.messages.create({
+    model: "claude-opus-4-6",
+    max_tokens: 4096,
+    thinking: { type: "adaptive" },
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mimeType, data: imageBase64 },
+          },
+          {
+            type: "text",
+            text: `Analyze this L'Oréal Perfect Store audit photo.
+Pharmacy: ${pharmacyContext.name} (Segment ${pharmacyContext.tier?.toUpperCase()}, ${pharmacyContext.segment ?? "general"})
+Shelf section: ${sectionLabel}
+
+Core L'Oréal products to track: Lipikar AP+M (La Roche-Posay), Effaclar Duo+M (La Roche-Posay), CeraVe Lait Hydratant, Vichy Lifactiv, Anthelios/UV Mune (La Roche-Posay), Vichy Minéral 89.
+Brands: La Roche-Posay, CeraVe, Vichy, SkinCeuticals, SkinBetter, Mixa.
+
+Return a JSON object with exactly this structure:
+{
+  "stockouts": ["product names with zero stock visible"],
+  "lowStock": ["product names with only 1-2 units visible"],
+  "competitorPresence": ["competitor brand names visible"],
+  "planogramIssues": ["specific planogram or display problems observed"],
+  "recommendations": ["concrete actionable recommendations"],
+  "overallScore": 7,
+  "summary": "2-3 sentence assessment of this shelf section",
+  "kpis": {
+    "shareOfShelf": 65,
+    "extraDisplay": 1,
+    "coreOnShelfAvailability": 80,
+    "numberOfFacings": 12,
+    "qualityOfPositioning": 7,
+    "shareOfAssortment": 70
+  },
+  "checklistSuggestions": ["item_2_share60", "item_2_eyelevel"]
+}
+
+KPI definitions:
+- shareOfShelf: % of visible shelf space occupied by L'Oréal brands (0-100), null if not assessable
+- extraDisplay: number of secondary/additional display locations visible for L'Oréal (integer), null if none
+- coreOnShelfAvailability: % of core SKUs (listed above) present and stocked (0-100), null if not assessable
+- numberOfFacings: total number of L'Oréal facings visible (integer), null if not assessable
+- qualityOfPositioning: overall quality score 1-10 (eye level, visibility, grouping), null if not assessable
+- shareOfAssortment: % of L'Oréal SKUs visible vs total dermocosmetic SKUs on shelf (0-100), null if not assessable
+
+checklistSuggestions: list ONLY the sub-item IDs from this list that appear to be satisfied based on what you can see:
+${relevantSubItemIds.join(", ")}
+
+Return only valid JSON, no markdown.`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from Perfect Store shelf analysis");
+  }
+
+  try {
+    return JSON.parse(extractJson(textBlock.text)) as PerfectStoreAnalysisResult;
+  } catch (e) {
+    console.error("[ps-shelf] Parse failed. Raw:", textBlock.text.slice(0, 800));
+    throw new Error(`Failed to parse Perfect Store shelf analysis: ${(e as Error).message}`);
+  }
+}
