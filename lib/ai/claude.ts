@@ -114,7 +114,7 @@ export async function streamPreVisitBriefing(
 Account details:
 - Name: ${context.pharmacyName}
 - City: ${context.city}
-- Tier: ${context.tier} account
+- Segment: ${context.tier?.toUpperCase()} (${context.tier === "a" ? "Strategic Partners — weekly, full PICOS" : context.tier === "b" ? "Core Pharmacies — bi-weekly, light PICOS" : context.tier === "c" ? "Development — monthly, simplified PICOS" : "Long-Tail / Self-Serve — not visited"})
 - Segment: ${context.segment ?? "general"}
 - Pharmacist: ${context.pharmacistName ?? "unknown"}
 - Rep: ${context.repName}
@@ -638,7 +638,7 @@ export async function suggestVisitObjectives(
 Account:
 - Name: ${context.pharmacyName}
 - City: ${context.city}
-- Tier: ${context.tier} account
+- Segment: ${context.tier?.toUpperCase()} (${context.tier === "a" ? "Strategic Partners — weekly, full PICOS" : context.tier === "b" ? "Core Pharmacies — bi-weekly, light PICOS" : context.tier === "c" ? "Development — monthly, simplified PICOS" : "Long-Tail / Self-Serve — not visited"})
 - Segment: ${context.segment ?? "general"}
 - Pharmacist: ${context.pharmacistName ?? "unknown"}
 - Last visit: ${context.lastVisitDate ?? "never"}
@@ -796,7 +796,7 @@ Available action types:
 
 Instructions:
 1. Prioritise actions relevant to the ${context.season} season (spring = sun care, skin renewal; summer = sun protection; autumn = hydration, repair; winter = rich moisturisers, lip care)
-2. Higher-tier accounts (platinum/gold) should receive higher-value, more strategic actions
+2. Segment A & B accounts should receive higher-value, more strategic actions; Seg C focuses on development; Seg D digital-only
 3. If shelf score is below 6 or not assessed, prioritise a specialist_visit action
 4. Suggest concrete, named L'Oréal products where relevant
 5. If dueAt is relevant, suggest a date within the next 30-60 days in ISO format (YYYY-MM-DD), otherwise null

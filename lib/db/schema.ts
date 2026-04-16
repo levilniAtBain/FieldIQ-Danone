@@ -16,12 +16,7 @@ import { relations } from "drizzle-orm";
 
 export const userRoleEnum = pgEnum("user_role", ["rep", "manager"]);
 
-export const pharmacyTierEnum = pgEnum("pharmacy_tier", [
-  "platinum",
-  "gold",
-  "silver",
-  "bronze",
-]);
+// pharmacy_tier enum kept in DB for legacy; segments now use text values a/b/c/d
 
 export const visitStatusEnum = pgEnum("visit_status", [
   "planned",
@@ -116,7 +111,7 @@ export const pharmacies = pgTable(
     longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
     pharmacistName: text("pharmacist_name"),
     pharmacistPhone: text("pharmacist_phone"),
-    tier: pharmacyTierEnum("tier").notNull().default("silver"),
+    tier: text("tier").notNull().default("c"), // "a" | "b" | "c" | "d"
     // Which rep owns this pharmacy
     repId: uuid("rep_id")
       .notNull()
@@ -128,6 +123,10 @@ export const pharmacies = pgTable(
     aiBriefingCache: text("ai_briefing_cache"),
     aiBriefingCachedAt: timestamp("ai_briefing_cached_at"),
     isActive: boolean("is_active").notNull().default(true),
+    // Segmentation axes (Perfect Store)
+    segmentPotential: text("segment_potential"), // "high" | "medium" | "low"
+    segmentProfile: jsonb("segment_profile").$type<string[]>(), // e.g. ["expert_led", "chain_grouped"]
+    segmentShopper: jsonb("segment_shopper").$type<string[]>(), // e.g. ["urban_affluent", "families"]
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

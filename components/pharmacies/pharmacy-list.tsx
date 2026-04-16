@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock } from "lucide-react";
+import { SegmentBadge } from "@/components/shared/segment-badge";
 
 type Pharmacy = {
   id: string;
@@ -56,7 +57,7 @@ export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
 
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <TierBadge tier={p.tier} />
+                <SegmentBadge tier={p.tier} />
                 {p.rep && (
                   <p className="text-xs text-gray-400 mt-0.5">{p.rep.name}</p>
                 )}
@@ -78,21 +79,3 @@ export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
   );
 }
 
-function TierBadge({ tier }: { tier: string }) {
-  const map: Record<string, string> = {
-    platinum: "bg-purple-50 text-purple-700",
-    gold: "bg-yellow-50 text-yellow-700",
-    silver: "bg-gray-100 text-gray-600",
-    bronze: "bg-orange-50 text-orange-700",
-  };
-  return (
-    <span
-      className={cn(
-        "text-xs font-medium px-2 py-0.5 rounded-full capitalize",
-        map[tier] ?? "bg-gray-100 text-gray-600"
-      )}
-    >
-      {tier}
-    </span>
-  );
-}

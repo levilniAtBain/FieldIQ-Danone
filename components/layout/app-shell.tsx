@@ -13,6 +13,10 @@ import {
   LogOut,
   Package,
   CalendarRange,
+  Star,
+  GaugeCircle,
+  BookOpen,
+  BrainCircuit,
 } from "lucide-react";
 
 const repNav = [
@@ -31,6 +35,12 @@ const managerNav = [
   { href: "/master-plan", label: "Plan", icon: CalendarRange },
   { href: "/catalog", label: "Catalog", icon: Package },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
+];
+
+const perfectStoreNav = [
+  { href: "/perfect-store/kpis", label: "KPIs", icon: GaugeCircle },
+  { href: "/perfect-store/execution-guide", label: "Execution Guide", icon: BookOpen },
+  { href: "/perfect-store/recommendation-model", label: "Reco Model", icon: BrainCircuit },
 ];
 
 export function AppShell({
@@ -107,7 +117,7 @@ export function AppShell({
       </nav>
 
       {/* Side nav (desktop) */}
-      <nav className="hidden md:flex fixed left-0 top-14 bottom-0 w-56 bg-white border-r border-gray-100 flex-col p-3 gap-1 z-30">
+      <nav className="hidden md:flex fixed left-0 top-14 bottom-0 w-56 bg-white border-r border-gray-100 flex-col p-3 gap-1 z-30 overflow-y-auto">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
@@ -126,6 +136,33 @@ export function AppShell({
             </Link>
           );
         })}
+
+        {/* Perfect Store section */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2 px-3 pb-1.5">
+            <Star size={13} className="text-amber-500" />
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Perfect Store</span>
+          </div>
+          {perfectStoreNav.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || pathname.startsWith(href + "/");
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-amber-50 text-amber-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                )}
+              >
+                <Icon size={16} />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
         {/* Logo at bottom of side nav */}
         <div className="mt-auto pt-4 pb-2">
           <img src="/field_iq_logo.svg" className="w-full h-auto" alt="FieldIQ" />

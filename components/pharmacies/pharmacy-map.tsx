@@ -106,7 +106,7 @@ export function PharmacyMap({ pharmacies }: { pharmacies: Pharmacy[] }) {
               <div style="font-family: system-ui, sans-serif; min-width: 160px; padding: 2px 0;">
                 <p style="font-weight: 600; font-size: 13px; margin: 0 0 3px; color: #111;">${p.name}</p>
                 <p style="font-size: 12px; color: #6b7280; margin: 0 0 3px;">${p.city}</p>
-                <p style="font-size: 11px; color: #9ca3af; margin: 0; text-transform: capitalize;">${p.tier} account</p>
+                <p style="font-size: 11px; color: #9ca3af; margin: 0; text-transform: uppercase;">Segment ${p.tier?.toUpperCase()}</p>
               </div>
             `);
 

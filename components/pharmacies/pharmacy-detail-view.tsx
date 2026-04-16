@@ -11,7 +11,9 @@ import { useRouter } from "next/navigation";
 import { SpecialistCoordPanel, SPECIALIST_STATUS_LABEL, type Specialist, type ActionForCoord } from "@/components/shared/specialist-coord-panel";
 import { VISIT_TYPE_OPTIONS } from "@/lib/visit-types";
 import { AiBriefing } from "./ai-briefing";
+import { SegmentBadge } from "@/components/shared/segment-badge";
 import { PharmacyAnalyticsTab } from "./pharmacy-analytics-tab";
+import { PharmacySegmentation } from "./pharmacy-segmentation";
 
 type Visit = {
   id: string;
@@ -34,6 +36,9 @@ type Pharmacy = {
   pharmacistPhone: string | null;
   segment: string | null;
   notes: string | null;
+  segmentPotential: string | null;
+  segmentProfile: string[] | null;
+  segmentShopper: string[] | null;
   rep: { name: string; email: string };
   visits: Visit[];
 };
@@ -79,7 +84,7 @@ export function PharmacyDetailView({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <TierBadge tier={pharmacy.tier} />
+              <SegmentBadge tier={pharmacy.tier} />
               {pharmacy.segment && (
                 <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                   {pharmacy.segment}
@@ -118,6 +123,14 @@ export function PharmacyDetailView({
           )}
         </div>
       </div>
+
+      {/* Segmentation */}
+      <PharmacySegmentation
+        pharmacyId={pharmacy.id}
+        initialPotential={pharmacy.segmentPotential}
+        initialProfile={pharmacy.segmentProfile}
+        initialShopper={pharmacy.segmentShopper}
+      />
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl overflow-x-auto">
@@ -420,24 +433,6 @@ function VisitsTab({
   );
 }
 
-function TierBadge({ tier }: { tier: string }) {
-  const map: Record<string, string> = {
-    platinum: "bg-purple-50 text-purple-700",
-    gold: "bg-yellow-50 text-yellow-700",
-    silver: "bg-gray-100 text-gray-600",
-    bronze: "bg-orange-50 text-orange-700",
-  };
-  return (
-    <span
-      className={cn(
-        "text-xs font-medium px-2 py-0.5 rounded-full capitalize",
-        map[tier] ?? "bg-gray-100 text-gray-600"
-      )}
-    >
-      {tier}
-    </span>
-  );
-}
 
 // ─── Orders tab ──────────────────────────────────────────────────────────────
 

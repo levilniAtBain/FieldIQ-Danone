@@ -12,36 +12,36 @@ type View = "list" | "map";
 type VisitStatus = "green" | "amber" | "red";
 type PharmacyWithStatus = PharmacyWithMeta & { visitStatus: VisitStatus };
 
-const TIERS = ["platinum", "gold", "silver", "bronze"] as const;
+const TIERS = ["a", "b", "c", "d"] as const;
 
 const TIER_DEFINITIONS = [
   {
-    tier: "platinum",
-    color: "bg-purple-100 text-purple-700 border-purple-200",
-    dot: "bg-purple-400",
-    label: "Platinum",
-    description: "Top 5% — highest volume, flagship accounts",
+    tier: "a",
+    color: "bg-teal-100 text-teal-800 border-teal-200",
+    dot: "bg-teal-500",
+    label: "Seg A",
+    description: "Strategic Partners — Weekly visit, Sales + Merch",
   },
   {
-    tier: "gold",
-    color: "bg-yellow-50 text-yellow-700 border-yellow-200",
-    dot: "bg-yellow-400",
-    label: "Gold",
-    description: "High volume, strong L'Oréal presence",
+    tier: "b",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    dot: "bg-blue-500",
+    label: "Seg B",
+    description: "Core Pharmacies — Bi-weekly, Sales Reps",
   },
   {
-    tier: "silver",
-    color: "bg-gray-100 text-gray-600 border-gray-200",
-    dot: "bg-gray-400",
-    label: "Silver",
-    description: "Medium volume, growth potential",
+    tier: "c",
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+    dot: "bg-orange-400",
+    label: "Seg C",
+    description: "Development Pharmacies — Monthly, Sales Reps",
   },
   {
-    tier: "bronze",
-    color: "bg-orange-50 text-orange-700 border-orange-200",
-    dot: "bg-orange-300",
-    label: "Bronze",
-    description: "Lower volume, emerging or occasional accounts",
+    tier: "d",
+    color: "bg-gray-200 text-gray-700 border-gray-300",
+    dot: "bg-gray-500",
+    label: "Seg D",
+    description: "Long-Tail / Self-Serve — Not visited",
   },
 ];
 
