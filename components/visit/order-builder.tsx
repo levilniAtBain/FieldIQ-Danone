@@ -18,6 +18,8 @@ import {
   Search,
   X,
   RefreshCw,
+  BarChart2,
+  Package,
 } from "lucide-react";
 
 export type OrderLine = {
@@ -80,6 +82,14 @@ export function OrderBuilder({
 
   // Reorder
   const [reordering, setReordering] = useState(false);
+
+  // CSV imports
+  const selloutFileRef = useRef<HTMLInputElement>(null);
+  const stockFileRef = useRef<HTMLInputElement>(null);
+  const [selloutImporting, setSelloutImporting] = useState(false);
+  const [stockImporting, setStockImporting] = useState(false);
+  const [selloutResult, setSelloutResult] = useState<{ matched: number; unmatched: number; total: number } | null>(null);
+  const [stockResult, setStockResult] = useState<{ matched: number; unmatched: number; total: number } | null>(null);
 
   // Manual product search
   const [showSearch, setShowSearch] = useState(false);
@@ -227,6 +237,29 @@ export function OrderBuilder({
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  // ── CSV imports ─────────────────────────────────────────────────────────
+  async function handleImportCsv(file: File, type: "sellout" | "stock") {
+    const setImporting = type === "sellout" ? setSelloutImporting : setStockImporting;
+    const setResult = type === "sellout" ? setSelloutResult : setStockResult;
+    setImporting(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/visits/${visitId}/import-${type}`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Import failed");
+      setResult(data);
+    } catch (e: unknown) {
+      setError((e as Error).message || "Import failed. Check the CSV format.");
+    } finally {
+      setImporting(false);
+    }
   }
 
   // ── AI build ────────────────────────────────────────────────────────────
@@ -392,6 +425,74 @@ export function OrderBuilder({
           />
         </div>
 
+        {/* Pharmacy data — sell-out & stock CSVs */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+          <p className="text-sm font-medium text-gray-900">Données pharmacie</p>
+          <p className="text-xs text-gray-400">Importez les fichiers CSV exportés de Winpharma ou LGPI pour affiner les quantités de commande.</p>
+
+          {/* Sell-out */}
+          <div>
+            <button
+              onClick={() => selloutFileRef.current?.click()}
+              disabled={selloutImporting}
+              className="w-full flex items-center justify-between border border-gray-200 rounded-xl px-3 py-2.5 text-sm hover:border-brand-300 hover:bg-brand-50 disabled:opacity-50 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-gray-700">
+                <BarChart2 size={14} className="text-brand-500" />
+                {selloutImporting ? "Import en cours…" : "Importer sell-out (.csv)"}
+              </span>
+              {selloutImporting && <Loader2 size={13} className="animate-spin text-gray-400" />}
+            </button>
+            <input
+              ref={selloutFileRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportCsv(f, "sellout"); e.target.value = ""; }}
+            />
+            {selloutResult && (
+              <div className={cn("mt-1.5 flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg",
+                selloutResult.unmatched === 0 ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"
+              )}>
+                <CheckCircle size={11} />
+                {selloutResult.total} lignes · {selloutResult.matched} matchées
+                {selloutResult.unmatched > 0 && ` · ${selloutResult.unmatched} non reconnues`}
+              </div>
+            )}
+          </div>
+
+          {/* Stock */}
+          <div>
+            <button
+              onClick={() => stockFileRef.current?.click()}
+              disabled={stockImporting}
+              className="w-full flex items-center justify-between border border-gray-200 rounded-xl px-3 py-2.5 text-sm hover:border-brand-300 hover:bg-brand-50 disabled:opacity-50 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-gray-700">
+                <Package size={14} className="text-brand-500" />
+                {stockImporting ? "Import en cours…" : "Importer stock actuel (.csv)"}
+              </span>
+              {stockImporting && <Loader2 size={13} className="animate-spin text-gray-400" />}
+            </button>
+            <input
+              ref={stockFileRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportCsv(f, "stock"); e.target.value = ""; }}
+            />
+            {stockResult && (
+              <div className={cn("mt-1.5 flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg",
+                stockResult.unmatched === 0 ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"
+              )}>
+                <CheckCircle size={11} />
+                {stockResult.total} lignes · {stockResult.matched} matchées
+                {stockResult.unmatched > 0 && ` · ${stockResult.unmatched} non reconnues`}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Reorder divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
@@ -431,7 +532,7 @@ export function OrderBuilder({
         </button>
 
         <p className="text-xs text-gray-400 text-center">
-          AI will pre-fill from previous orders and peer data, adjusted by your notes
+          L'IA utilise l'historique, les données sell-out/stock et les notes pour proposer les quantités
         </p>
       </div>
     );

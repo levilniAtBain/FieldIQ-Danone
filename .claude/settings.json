@@ -25,7 +25,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3020/field_iq_logo.jpg)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3020)",
       "Bash(identify \"/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/public/field_iq_logo.jpg\")",
-      "Bash(sips -g pixelWidth -g pixelHeight \"/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/public/field_iq_logo.jpg\")"
+      "Bash(sips -g pixelWidth -g pixelHeight \"/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/public/field_iq_logo.jpg\")",
+      "Bash(DATABASE_URL=\"postgresql://fieldiq:fieldiq@localhost:5432/fieldiq\" npx drizzle-kit push)",
+      "Bash(DATABASE_URL=\"postgresql://fieldiq:fieldiq@localhost:5432/fieldiq\" node_modules/.bin/drizzle-kit push)"
     ],
     "additionalDirectories": [
       "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/files",

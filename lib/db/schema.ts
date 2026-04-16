@@ -350,6 +350,41 @@ export const salesData = pgTable(
   ]
 );
 
+// ─── Visit sell-out & stock (imported from pharmacy system) ──────────────────
+
+export const visitSelloutLines = pgTable("visit_sellout_lines", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  visitId: uuid("visit_id")
+    .notNull()
+    .references(() => visits.id, { onDelete: "cascade" }),
+  pharmacyId: uuid("pharmacy_id")
+    .notNull()
+    .references(() => pharmacies.id),
+  productId: uuid("product_id").references(() => products.id), // null if unmatched
+  rawProductName: text("raw_product_name").notNull(),
+  rawSku: text("raw_sku"),
+  qtySold: integer("qty_sold").notNull(),
+  periodLabel: text("period_label"), // e.g. "01/03/2026–31/03/2026"
+  matchConfidence: text("match_confidence"), // "exact" | "fuzzy" | "ai" | null
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const visitStockLines = pgTable("visit_stock_lines", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  visitId: uuid("visit_id")
+    .notNull()
+    .references(() => visits.id, { onDelete: "cascade" }),
+  pharmacyId: uuid("pharmacy_id")
+    .notNull()
+    .references(() => pharmacies.id),
+  productId: uuid("product_id").references(() => products.id),
+  rawProductName: text("raw_product_name").notNull(),
+  rawSku: text("raw_sku"),
+  qtyInStock: integer("qty_in_stock").notNull(),
+  matchConfidence: text("match_confidence"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -375,6 +410,8 @@ export const visitsRelations = relations(visits, ({ one, many }) => ({
   rep: one(users, { fields: [visits.repId], references: [users.id] }),
   files: many(visitFiles),
   order: one(orders, { fields: [visits.id], references: [orders.visitId] }),
+  selloutLines: many(visitSelloutLines),
+  stockLines: many(visitStockLines),
 }));
 
 export const visitFilesRelations = relations(visitFiles, ({ one }) => ({
@@ -428,4 +465,16 @@ export const masterPlanCoVisitorsRelations = relations(masterPlanCoVisitors, ({ 
     fields: [masterPlanCoVisitors.masterPlanId],
     references: [masterPlanEntries.id],
   }),
+}));
+
+export const visitSelloutLinesRelations = relations(visitSelloutLines, ({ one }) => ({
+  visit: one(visits, { fields: [visitSelloutLines.visitId], references: [visits.id] }),
+  pharmacy: one(pharmacies, { fields: [visitSelloutLines.pharmacyId], references: [pharmacies.id] }),
+  product: one(products, { fields: [visitSelloutLines.productId], references: [products.id] }),
+}));
+
+export const visitStockLinesRelations = relations(visitStockLines, ({ one }) => ({
+  visit: one(visits, { fields: [visitStockLines.visitId], references: [visits.id] }),
+  pharmacy: one(pharmacies, { fields: [visitStockLines.pharmacyId], references: [pharmacies.id] }),
+  product: one(products, { fields: [visitStockLines.productId], references: [products.id] }),
 }));

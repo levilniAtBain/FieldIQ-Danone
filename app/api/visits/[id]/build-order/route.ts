@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { visits, orders, orderLines, visitFiles } from "@/lib/db/schema";
+import { visits, orders, orderLines, visitFiles, visitSelloutLines, visitStockLines, products } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import {
   getLastOrderForPharmacy,
@@ -52,13 +52,30 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const [lastOrder, allProducts, peerSuggestions, shelfFiles] = await Promise.all([
+  const [lastOrder, allProducts, peerSuggestions, shelfFiles, selloutRows, stockRows] = await Promise.all([
     getLastOrderForPharmacy(visit.pharmacyId),
     getAllProductsForOrder(),
     getPeerProductSuggestions(visit.pharmacyId, session.userId),
     db.select({ aiAnalysisJson: visitFiles.aiAnalysisJson })
       .from(visitFiles)
       .where(and(eq(visitFiles.visitId, visitId), eq(visitFiles.type, "shelf_photo"))),
+    db.select({
+        qtySold: visitSelloutLines.qtySold,
+        periodLabel: visitSelloutLines.periodLabel,
+        sku: products.sku,
+        name: products.name,
+      })
+      .from(visitSelloutLines)
+      .innerJoin(products, eq(visitSelloutLines.productId, products.id))
+      .where(eq(visitSelloutLines.visitId, visitId)),
+    db.select({
+        qtyInStock: visitStockLines.qtyInStock,
+        sku: products.sku,
+        name: products.name,
+      })
+      .from(visitStockLines)
+      .innerJoin(products, eq(visitStockLines.productId, products.id))
+      .where(eq(visitStockLines.visitId, visitId)),
   ]);
 
   const shelfAnalyses = shelfFiles
@@ -93,6 +110,17 @@ export async function POST(
         brand: p.brand,
       })),
       availableProducts: allProducts,
+      sellOutData: selloutRows.map((r) => ({
+        sku: r.sku,
+        name: r.name,
+        qtySold: r.qtySold,
+        periodLabel: r.periodLabel,
+      })),
+      stockData: stockRows.map((r) => ({
+        sku: r.sku,
+        name: r.name,
+        qtyInStock: r.qtyInStock,
+      })),
     });
 
     // Map SKUs back to product IDs

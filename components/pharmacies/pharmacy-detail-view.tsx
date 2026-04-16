@@ -11,11 +11,13 @@ import { useRouter } from "next/navigation";
 import { SpecialistCoordPanel, SPECIALIST_STATUS_LABEL, type Specialist, type ActionForCoord } from "@/components/shared/specialist-coord-panel";
 import { VISIT_TYPE_OPTIONS } from "@/lib/visit-types";
 import { AiBriefing } from "./ai-briefing";
+import { PharmacyAnalyticsTab } from "./pharmacy-analytics-tab";
 
 type Visit = {
   id: string;
   status: string;
   scheduledAt: Date | null;
+  startedAt: Date | null;
   completedAt: Date | null;
   notes: string | null;
   aiReportDraft: string | null;
@@ -36,13 +38,14 @@ type Pharmacy = {
   visits: Visit[];
 };
 
-type Tab = "overview" | "visits" | "orders" | "actions" | "master-plan";
+type Tab = "overview" | "visits" | "orders" | "actions" | "analytics" | "master-plan";
 
 const TAB_LABEL: Record<Tab, string> = {
   overview: "Overview",
   visits: "Visits",
   orders: "Orders",
   actions: "Actions",
+  analytics: "Analytics",
   "master-plan": "Plan",
 };
 
@@ -58,8 +61,8 @@ export function PharmacyDetailView({
   const [tab, setTab] = useState<Tab>(initialTab);
 
   const tabs: Tab[] = session.role === "rep"
-    ? ["overview", "visits", "orders", "actions", "master-plan"]
-    : ["overview", "visits", "orders", "actions"];
+    ? ["overview", "visits", "orders", "actions", "analytics", "master-plan"]
+    : ["overview", "visits", "orders", "actions", "analytics"];
 
   return (
     <div className="space-y-5">
@@ -143,6 +146,7 @@ export function PharmacyDetailView({
       {tab === "actions" && (
         <ActionsTab pharmacyId={pharmacy.id} session={session} />
       )}
+      {tab === "analytics" && <PharmacyAnalyticsTab pharmacyId={pharmacy.id} />}
       {tab === "master-plan" && (
         <MasterPlanTab pharmacyId={pharmacy.id} pharmacyName={pharmacy.name} onNavigateToActions={() => setTab("actions")} />
       )}
@@ -266,9 +270,9 @@ function OverviewTab({ pharmacy }: { pharmacy: Pharmacy }) {
                         <p className="text-gray-700 capitalize">{v.status.replace("_", " ")}</p>
                         {v.notes && <p className="text-xs text-gray-400 truncate">{v.notes}</p>}
                       </div>
-                      {v.completedAt && (
+                      {(v.completedAt ?? v.startedAt ?? v.scheduledAt) && (
                         <span className="text-xs text-gray-400 flex-shrink-0 suppressHydrationWarning">
-                          {format(new Date(v.completedAt), "d MMM yy")}
+                          {format(new Date((v.completedAt ?? v.startedAt ?? v.scheduledAt)!), "d MMM yy")}
                         </span>
                       )}
                     </div>
@@ -383,12 +387,12 @@ function VisitsTab({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <StatusBadge status={v.status} />
-              {v.completedAt && (
+              {(v.completedAt ?? v.startedAt) && (
                 <span className="text-xs text-gray-400">
-                  {format(new Date(v.completedAt), "dd MMM yyyy")}
+                  {format(new Date((v.completedAt ?? v.startedAt)!), "dd MMM yyyy")}
                 </span>
               )}
-              {!v.completedAt && v.scheduledAt && (
+              {!v.completedAt && !v.startedAt && v.scheduledAt && (
                 <span className="text-xs text-gray-400" suppressHydrationWarning>
                   {formatDistanceToNow(new Date(v.scheduledAt), { addSuffix: true })}
                 </span>

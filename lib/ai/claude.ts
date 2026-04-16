@@ -318,6 +318,123 @@ Return only valid JSON, no markdown.`,
   }
 }
 
+// ─── CSV product matching ────────────────────────────────────────────────────
+
+export type CsvRawLine = { rawName: string; rawSku: string | null; qty: number };
+export type MatchedLine = {
+  rawName: string;
+  rawSku: string | null;
+  qty: number;
+  productId: string | null;
+  matchedSku: string | null;
+  confidence: "exact" | "fuzzy" | "ai" | null;
+};
+
+/** Normalize a string for fuzzy comparison */
+function normStr(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export async function matchCsvLinesToProducts(
+  rawLines: CsvRawLine[],
+  catalog: Array<{ id: string; sku: string; name: string; brand: string }>
+): Promise<MatchedLine[]> {
+  const results: MatchedLine[] = [];
+  const unmatched: CsvRawLine[] = [];
+
+  for (const line of rawLines) {
+    // Step 1: exact SKU match
+    if (line.rawSku) {
+      const exact = catalog.find(
+        (p) => p.sku.toLowerCase() === line.rawSku!.toLowerCase()
+      );
+      if (exact) {
+        results.push({ ...line, productId: exact.id, matchedSku: exact.sku, confidence: "exact" });
+        continue;
+      }
+    }
+
+    // Step 2: fuzzy name match — name contains all tokens from raw name (or vice versa)
+    const rawTokens = normStr(line.rawName).split(" ").filter((t) => t.length > 2);
+    const fuzzy = catalog.find((p) => {
+      const catNorm = normStr(p.name);
+      return rawTokens.length > 0 && rawTokens.every((t) => catNorm.includes(t));
+    });
+    if (fuzzy) {
+      results.push({ ...line, productId: fuzzy.id, matchedSku: fuzzy.sku, confidence: "fuzzy" });
+      continue;
+    }
+
+    unmatched.push(line);
+  }
+
+  // Step 3: AI batch match for remaining unmatched lines
+  if (unmatched.length > 0) {
+    const catalogList = catalog
+      .map((p) => `${p.sku} | ${p.name} | ${p.brand}`)
+      .join("\n");
+    const linesList = unmatched
+      .map((l, i) => `${i}: ${l.rawName}${l.rawSku ? ` (code: ${l.rawSku})` : ""}`)
+      .join("\n");
+
+    const response = await client.messages.create({
+      model: "claude-opus-4-6",
+      max_tokens: 1500,
+      messages: [
+        {
+          role: "user",
+          content: `Match each pharmacy product to the closest L'Oréal catalog entry. These are French pharmacy system exports (Winpharma/LGPI) — product names may be truncated or abbreviated.
+
+Catalog (SKU | Name | Brand):
+${catalogList}
+
+Products to match (index: name):
+${linesList}
+
+For each index, return the best matching SKU from the catalog, or null if no reasonable match exists. Return JSON only:
+[{"index": 0, "matchedSku": "CER-001"}, {"index": 1, "matchedSku": null}]`,
+        },
+      ],
+    });
+
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (textBlock && textBlock.type === "text") {
+      try {
+        const aiMatches = JSON.parse(extractJson(textBlock.text)) as Array<{
+          index: number;
+          matchedSku: string | null;
+        }>;
+        for (const match of aiMatches) {
+          const line = unmatched[match.index];
+          if (!line) continue;
+          if (match.matchedSku) {
+            const product = catalog.find((p) => p.sku === match.matchedSku);
+            results.push({
+              ...line,
+              productId: product?.id ?? null,
+              matchedSku: match.matchedSku,
+              confidence: product ? "ai" : null,
+            });
+          } else {
+            results.push({ ...line, productId: null, matchedSku: null, confidence: null });
+          }
+        }
+      } catch {
+        // AI parse failed — push all as unmatched
+        for (const line of unmatched) {
+          results.push({ ...line, productId: null, matchedSku: null, confidence: null });
+        }
+      }
+    } else {
+      for (const line of unmatched) {
+        results.push({ ...line, productId: null, matchedSku: null, confidence: null });
+      }
+    }
+  }
+
+  return results;
+}
+
 // ─── AI order builder ────────────────────────────────────────────────────────
 
 export type OrderLineItem = {
@@ -338,6 +455,8 @@ export interface OrderBuilderContext {
   voiceTranscript: string | null;
   peerSuggestions: Array<{ sku: string; name: string; peerAvgQty: number; brand: string }>;
   availableProducts: Array<{ id: string; sku: string; name: string; brand: string; unitPrice: string | null }>;
+  sellOutData?: Array<{ sku: string; name: string; qtySold: number; periodLabel: string | null }>;
+  stockData?: Array<{ sku: string; name: string; qtyInStock: number }>;
 }
 
 export type AiOrderResult = {
@@ -385,6 +504,16 @@ ${context.scannedOrderItems.length > 0
 Voice notes from this visit:
 ${context.voiceTranscript ?? "None"}
 
+Sell-out data (what this pharmacy sold since last visit):
+${context.sellOutData && context.sellOutData.length > 0
+  ? context.sellOutData.map((s) => `  ${s.sku} ${s.name}: ${s.qtySold} unités vendues${s.periodLabel ? ` (${s.periodLabel})` : ""}`).join("\n")
+  : "  Non disponible"}
+
+Stock actuel (inventaire en pharmacie):
+${context.stockData && context.stockData.length > 0
+  ? context.stockData.map((s) => `  ${s.sku} ${s.name}: ${s.qtyInStock} unités en stock`).join("\n")
+  : "  Non disponible"}
+
 Products frequently ordered by nearby pharmacies (peer data):
 ${context.peerSuggestions.length > 0
   ? context.peerSuggestions.map((p) => `  ${p.sku} ${p.name}: avg ${p.peerAvgQty} units`).join("\n")
@@ -393,10 +522,15 @@ ${context.peerSuggestions.length > 0
 Instructions:
 1. Start from the previous order as the baseline
 2. Prioritize replenishing any stockouts or low-stock products identified in shelf photos
-3. Apply any adjustments mentioned in scanned notes or voice (e.g. "add 2 more CeraVe", "skip Vichy this time")
-4. Consider peer suggestions for products not in the last order
-5. Only include SKUs from the available products list
-6. Provide a brief rationale for each line, noting when driven by shelf analysis
+3. If sell-out data is available, use it as the primary signal for replenishment quantities:
+   - High sell-out + low/zero stock → urgent replenishment, quantity ≥ sell-out volume
+   - High sell-out + adequate stock → small top-up only
+   - Low/zero sell-out + high stock → skip or reduce significantly
+   - Product in sell-out but absent from stock → likely stockout, high priority
+4. Apply any adjustments mentioned in scanned notes or voice (e.g. "add 2 more CeraVe", "skip Vichy this time")
+5. Consider peer suggestions for products not covered by sell-out or history
+6. Only include SKUs from the available products list
+7. Provide a brief rationale for each line, noting when driven by sell-out/stock data
 
 Return JSON only — no markdown:
 {

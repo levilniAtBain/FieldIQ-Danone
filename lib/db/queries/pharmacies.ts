@@ -59,7 +59,7 @@ export async function getPharmacyById(id: string) {
     with: {
       rep: { columns: { id: true, name: true, email: true } },
       visits: {
-        orderBy: [desc(visits.completedAt)],
+        orderBy: [desc(visits.startedAt), desc(visits.scheduledAt)],
         limit: 10,
       },
     },
