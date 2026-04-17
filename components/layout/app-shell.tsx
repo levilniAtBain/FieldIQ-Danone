@@ -17,6 +17,7 @@ import {
   GaugeCircle,
   BookOpen,
   BrainCircuit,
+  LayoutTemplate,
 } from "lucide-react";
 
 const repNav = [
@@ -39,6 +40,7 @@ const managerNav = [
 
 const perfectStoreNav = [
   { href: "/perfect-store/kpis", label: "KPIs", icon: GaugeCircle },
+  { href: "/perfect-store/planogram", label: "Planogram", icon: LayoutTemplate },
   { href: "/perfect-store/execution-guide", label: "Execution Guide", icon: BookOpen },
   { href: "/perfect-store/recommendation-model", label: "Reco Model", icon: BrainCircuit },
 ];
