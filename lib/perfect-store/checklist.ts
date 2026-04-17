@@ -266,31 +266,37 @@ export function generateAuditSummary(
   checklistState: Record<string, string[]>,
   picosScore: number
 ): string {
-  const lines: string[] = [`PICOS score: ${picosScore}/100.`];
+  const status =
+    picosScore >= 80 ? "strong compliance"
+    : picosScore >= 60 ? "good progress but room for improvement"
+    : picosScore >= 40 ? "partial compliance — several areas need attention"
+    : "significant gaps across the store";
 
-  for (const section of ["main_shelf", "interruption", "overall_store"] as ChecklistSection[]) {
-    const items = CHECKLIST_ITEMS.filter((i) => i.section === section);
-    const passing: string[] = [];
-    const failing: string[] = [];
+  const passing: string[] = [];
+  const failing: string[] = [];
 
-    for (const item of items) {
-      const checked = checklistState[item.id] ?? [];
-      const total = item.subItems.length;
-      if (total === 0) continue;
-      const ratio = checked.length / total;
-      if (ratio >= 0.5) {
-        passing.push(item.label.replace(/\.$/, "").toLowerCase());
-      } else {
-        failing.push(item.label.replace(/\.$/, "").toLowerCase());
-      }
+  for (const item of CHECKLIST_ITEMS) {
+    const checked = checklistState[item.id] ?? [];
+    const total = item.subItems.length;
+    if (total === 0) continue;
+    const ratio = checked.length / total;
+    if (ratio >= 0.5) {
+      passing.push(`• ${item.label}`);
+    } else {
+      failing.push(`• ${item.label}`);
     }
-
-    const sectionLabel = SECTION_LABELS[section];
-    const parts: string[] = [];
-    if (passing.length > 0) parts.push(`✓ ${passing.join("; ")}`);
-    if (failing.length > 0) parts.push(`✗ ${failing.join("; ")}`);
-    if (parts.length > 0) lines.push(`${sectionLabel}: ${parts.join(" — ")}.`);
   }
 
-  return lines.join(" ");
+  const parts: string[] = [];
+  parts.push(`PICOS score ${picosScore}/100 — ${status}.`);
+
+  if (passing.length > 0) {
+    parts.push(`\nWhat's working:\n${passing.join("\n")}`);
+  }
+
+  if (failing.length > 0) {
+    parts.push(`\nNeeds improvement:\n${failing.join("\n")}`);
+  }
+
+  return parts.join("\n");
 }

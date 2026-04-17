@@ -9,6 +9,7 @@ import {
   computePicosScore,
   type ChecklistSection,
 } from "@/lib/perfect-store/checklist";
+import { PlanogramGuideButton } from "./planogram-guide-modal";
 
 type ShelfSection = "main" | "brand" | "solar" | "deodorant";
 
@@ -40,11 +41,13 @@ type PhotoState = {
 type Props = {
   pharmacyId: string;
   psVisitId: string;
-  onClose: () => void;
+  onClose: (keepDraft: boolean) => void;
   onSaved: () => void;
 };
 
 export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSaved }: Props) {
+  const [isDirty, setIsDirty] = useState(false);
+
   const [photoStates, setPhotoStates] = useState<Record<ShelfSection, PhotoState>>({
     main: { status: "idle" },
     brand: { status: "idle" },
@@ -118,6 +121,7 @@ export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSave
         }
 
         const data = await res.json();
+        setIsDirty(true);
         setPhotoStates((prev) => ({
           ...prev,
           [section]: {
@@ -164,6 +168,7 @@ export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSave
   );
 
   const toggleSubItem = (itemId: string, subItemId: string) => {
+    setIsDirty(true);
     setChecklist((prev) => {
       const current = prev[itemId] ?? [];
       return {
@@ -211,7 +216,7 @@ export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSave
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
-      <div className="flex-1 bg-black/40" onClick={onClose} />
+      <div className="flex-1 bg-black/40" onClick={() => onClose(isDirty)} />
 
       {/* Panel */}
       <div className="w-full max-w-xl bg-white shadow-xl flex flex-col overflow-hidden">
@@ -221,7 +226,7 @@ export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSave
             <h2 className="text-base font-semibold text-gray-900">New Perfect Store Audit</h2>
             <p className="text-xs text-gray-500 mt-0.5">Upload shelf photos then complete the checklist</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={() => onClose(isDirty)} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -402,10 +407,13 @@ export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSave
                     {CHECKLIST_ITEMS.filter((i) => i.section === section).map((item) => (
                       <div key={item.id} className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="text-xs font-medium text-gray-800">
-                            <span className="text-gray-400 mr-1">#{item.num}</span>
-                            {item.label}
-                          </p>
+                          <div className="flex items-start gap-1 flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-800">
+                              <span className="text-gray-400 mr-1">#{item.num}</span>
+                              {item.label}
+                            </p>
+                            {item.id === "item_2" && <PlanogramGuideButton />}
+                          </div>
                           <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">
                             {item.maxPoints} pts
                           </span>
@@ -454,7 +462,7 @@ export function PerfectStoreUpdatePanel({ pharmacyId, psVisitId, onClose, onSave
           <textarea
             placeholder="Notes (optional)…"
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => { setIsDirty(true); setNotes(e.target.value); }}
             rows={2}
             className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
           />

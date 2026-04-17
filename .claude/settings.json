@@ -31,7 +31,8 @@
       "Bash(ls -la /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies/[id]/)",
       "Bash(grep -E \"\\\\.ts$\")",
       "Bash(grep -E \"POST|GET|PUT|PATCH|DELETE\" /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies/[id]/**/route.ts)",
-      "Bash(find /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies -type f -name \"route.ts\" -exec sh -c 'echo \"=== {} ===\"; grep -E \"^export.*\\\\\\(|^async function\" \"$1\" | head -5' _ {} \\\\;)"
+      "Bash(find /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/pharmacies -type f -name \"route.ts\" -exec sh -c 'echo \"=== {} ===\"; grep -E \"^export.*\\\\\\(|^async function\" \"$1\" | head -5' _ {} \\\\;)",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/files",

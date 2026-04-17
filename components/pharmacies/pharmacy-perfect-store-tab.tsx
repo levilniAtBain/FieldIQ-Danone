@@ -4,11 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   Plus, Loader2, Star, Camera, ClipboardList,
-  ChevronDown, ChevronUp, CheckSquare2, Square,
+  ChevronDown, ChevronUp, CheckSquare2, Square, AlertTriangle, Lightbulb, PencilLine, Trash2,
 } from "lucide-react";
 import { PerfectStoreUpdatePanel } from "./perfect-store-update-panel";
 import { format } from "date-fns";
 import { CHECKLIST_ITEMS, SECTION_LABELS, type ChecklistSection } from "@/lib/perfect-store/checklist";
+import { PlanogramGuideButton } from "./planogram-guide-modal";
 
 type KpiValues = {
   shareOfShelf: number | null;
@@ -86,6 +87,69 @@ function scoreColor(score: number | null) {
   return "bg-red-100 text-red-800";
 }
 
+// Renders audit summary with bullet-point formatting
+function AuditSummaryText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <div className="space-y-1">
+      {lines.map((line, i) => {
+        if (line.startsWith("What's working:")) {
+          return <p key={i} className="text-xs font-semibold text-green-700 mt-2">{line}</p>;
+        }
+        if (line.startsWith("Needs improvement:")) {
+          return <p key={i} className="text-xs font-semibold text-red-700 mt-2">{line}</p>;
+        }
+        if (line.startsWith("•")) {
+          const isInNeeds = lines.slice(0, i).some((l) => l.startsWith("Needs improvement:"));
+          return (
+            <p key={i} className={cn(
+              "text-xs pl-1 leading-snug",
+              isInNeeds ? "text-red-700" : "text-green-700"
+            )}>
+              {line}
+            </p>
+          );
+        }
+        if (line.trim() === "") return null;
+        return <p key={i} className="text-xs font-medium text-gray-800">{line}</p>;
+      })}
+    </div>
+  );
+}
+
+type ImprovementAction = { type: "stockout" | "planogram" | "recommendation" | "checklist"; text: string };
+
+function deriveImprovementActions(visit: PsVisit): ImprovementAction[] {
+  const actions: ImprovementAction[] = [];
+  const seen = new Set<string>();
+
+  const add = (type: ImprovementAction["type"], text: string) => {
+    const key = text.trim().toLowerCase();
+    if (!seen.has(key)) { seen.add(key); actions.push({ type, text: text.trim() }); }
+  };
+
+  // From photo analyses
+  for (const file of visit.files) {
+    const a = file.aiAnalysisJson;
+    if (!a) continue;
+    for (const s of a.stockouts ?? []) add("stockout", `Restock ${s}`);
+    for (const s of a.planogramIssues ?? []) add("planogram", s);
+    for (const s of a.recommendations ?? []) add("recommendation", s);
+  }
+
+  // From checklist gaps (items with 0% compliance)
+  if (visit.checklistJson) {
+    for (const item of CHECKLIST_ITEMS) {
+      const checked = visit.checklistJson[item.id] ?? [];
+      if (item.subItems.length > 0 && checked.length === 0) {
+        add("checklist", `Address: ${item.label}`);
+      }
+    }
+  }
+
+  return actions.slice(0, 8);
+}
+
 function AggregatedKpiCard({ kpisJson }: { kpisJson: Record<string, KpiValues | null> }) {
   const fields = Object.keys(KPI_LABELS) as (keyof KpiValues)[];
   const agg: Record<string, { sum: number; count: number }> = {};
@@ -137,10 +201,13 @@ function ChecklistReadOnly({ checklistJson }: { checklistJson: Record<string, st
               return (
                 <div key={item.id} className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="text-xs font-medium text-gray-800">
-                      <span className="text-gray-400 mr-1">#{item.num}</span>
-                      {item.label}
-                    </p>
+                    <div className="flex items-start gap-1 flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-800">
+                        <span className="text-gray-400 mr-1">#{item.num}</span>
+                        {item.label}
+                      </p>
+                      {item.id === "item_2" && <PlanogramGuideButton />}
+                    </div>
                     <span className={cn(
                       "text-xs font-semibold px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0",
                       ratio >= 1 ? "bg-green-100 text-green-700"
@@ -250,43 +317,92 @@ function VisitRow({
   visit,
   onExpand,
   expanded,
+  onResume,
+  onDelete,
 }: {
   visit: PsVisit;
   onExpand: () => void;
   expanded: boolean;
+  onResume?: () => void;
+  onDelete?: () => void;
 }) {
+  const isDraft = visit.picosScore === null && !visit.aiSummary;
+
   return (
-    <div className="border border-gray-100 rounded-xl overflow-hidden">
+    <div className={cn(
+      "border rounded-xl overflow-hidden",
+      isDraft ? "border-amber-200 bg-amber-50/30" : "border-gray-100"
+    )}>
       {/* Row header — always visible */}
-      <button
-        onClick={onExpand}
-        className="w-full flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 text-left"
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium text-gray-900">
-              {format(new Date(visit.visitDate), "dd MMM yyyy")}
-            </span>
-            {visit.picosScore !== null && (
-              <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", scoreColor(visit.picosScore))}>
-                PICOS {visit.picosScore}
+      {isDraft ? (
+        <div className="flex items-center gap-3 px-4 py-3 bg-white">
+          {/* Left: date + badges (clickable → resume) */}
+          <button onClick={onResume} className="flex-1 min-w-0 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium text-gray-900">
+                {format(new Date(visit.visitDate), "dd MMM yyyy")}
               </span>
-            )}
-            {visit.fileCount > 0 && (
-              <span className="text-xs text-gray-400 flex items-center gap-1">
-                <Camera className="w-3 h-3" />
-                {visit.fileCount}
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                Draft
               </span>
-            )}
+              {visit.fileCount > 0 && (
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <Camera className="w-3 h-3" />
+                  {visit.fileCount}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5">{visit.repName}</p>
+          </button>
+          {/* Right: Resume + Delete */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={onResume}
+              className="flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+            >
+              <PencilLine className="w-3.5 h-3.5" />
+              Resume
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              title="Delete draft"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">{visit.repName}</p>
         </div>
-        {expanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        )}
-      </button>
+      ) : (
+        <button
+          onClick={onExpand}
+          className="w-full flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 text-left"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium text-gray-900">
+                {format(new Date(visit.visitDate), "dd MMM yyyy")}
+              </span>
+              {visit.picosScore !== null && (
+                <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", scoreColor(visit.picosScore))}>
+                  PICOS {visit.picosScore}
+                </span>
+              )}
+              {visit.fileCount > 0 && (
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <Camera className="w-3 h-3" />
+                  {visit.fileCount}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5">{visit.repName}</p>
+          </div>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          )}
+        </button>
+      )}
 
       {/* Expanded detail */}
       {expanded && (
@@ -294,8 +410,8 @@ function VisitRow({
           {/* AI Summary */}
           {visit.aiSummary && (
             <div className="px-4 py-3 bg-amber-50">
-              <p className="text-xs font-semibold text-amber-700 mb-1">Audit Summary</p>
-              <p className="text-xs text-gray-700 leading-relaxed">{visit.aiSummary}</p>
+              <p className="text-xs font-semibold text-amber-700 mb-2">Audit Summary</p>
+              <AuditSummaryText text={visit.aiSummary} />
             </div>
           )}
 
@@ -379,9 +495,32 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
     }
   };
 
+  const handlePanelClose = async (keepDraft: boolean) => {
+    if (!keepDraft && activeVisitId) {
+      // Delete the empty visit silently
+      await fetch(
+        `/api/pharmacies/${pharmacyId}/perfect-store/${activeVisitId}`,
+        { method: "DELETE" }
+      );
+    }
+    setPanelOpen(false);
+    setActiveVisitId(null);
+    fetchData();
+  };
+
   const handlePanelSaved = () => {
     setPanelOpen(false);
     setActiveVisitId(null);
+    fetchData();
+  };
+
+  const handleResumeDraft = (visitId: string) => {
+    setActiveVisitId(visitId);
+    setPanelOpen(true);
+  };
+
+  const handleDeleteDraft = async (visitId: string) => {
+    await fetch(`/api/pharmacies/${pharmacyId}/perfect-store/${visitId}`, { method: "DELETE" });
     fetchData();
   };
 
@@ -425,21 +564,53 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
         </button>
       </div>
 
-      {/* Latest audit summary + KPIs */}
-      {(data?.latestSummary || data?.latestKpis) && (
-        <div className="bg-amber-50 rounded-xl border border-amber-100 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Star className="w-4 h-4 text-amber-500" />
-            <p className="text-sm font-semibold text-gray-800">Latest Audit</p>
+      {/* Latest audit summary + KPIs + actions */}
+      {(data?.latestSummary || data?.latestKpis) && (() => {
+        const latestVisit = visits[0] ?? null;
+        const actions = latestVisit ? deriveImprovementActions(latestVisit) : [];
+        return (
+          <div className="bg-amber-50 rounded-xl border border-amber-100 p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500" />
+              <p className="text-sm font-semibold text-gray-800">Latest Audit</p>
+            </div>
+
+            {data.latestSummary && (
+              <AuditSummaryText text={data.latestSummary} />
+            )}
+
+            {data.latestKpis && Object.keys(data.latestKpis).length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">KPIs</p>
+                <AggregatedKpiCard kpisJson={data.latestKpis} />
+              </div>
+            )}
+
+            {actions.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                  Improvement Actions
+                </p>
+                <div className="space-y-1.5">
+                  {actions.map((action, i) => {
+                    const icon =
+                      action.type === "stockout" ? <AlertTriangle className="w-3 h-3 text-red-500 flex-shrink-0 mt-0.5" />
+                      : action.type === "planogram" ? <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                      : <Lightbulb className="w-3 h-3 text-blue-400 flex-shrink-0 mt-0.5" />;
+                    return (
+                      <div key={i} className="flex items-start gap-2 bg-white/70 rounded-lg px-2.5 py-2">
+                        {icon}
+                        <p className="text-xs text-gray-700 leading-snug">{action.text}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-          {data.latestSummary && (
-            <p className="text-xs text-gray-700 leading-relaxed">{data.latestSummary}</p>
-          )}
-          {data.latestKpis && Object.keys(data.latestKpis).length > 0 && (
-            <AggregatedKpiCard kpisJson={data.latestKpis} />
-          )}
-        </div>
-      )}
+        );
+      })()}
 
       {/* Visits list */}
       {visits.length === 0 ? (
@@ -461,6 +632,8 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
               visit={visit}
               expanded={expandedId === visit.id}
               onExpand={() => setExpandedId((prev) => (prev === visit.id ? null : visit.id))}
+              onResume={() => handleResumeDraft(visit.id)}
+              onDelete={() => handleDeleteDraft(visit.id)}
             />
           ))}
         </div>
@@ -471,7 +644,7 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
         <PerfectStoreUpdatePanel
           pharmacyId={pharmacyId}
           psVisitId={activeVisitId}
-          onClose={() => { setPanelOpen(false); setActiveVisitId(null); }}
+          onClose={handlePanelClose}
           onSaved={handlePanelSaved}
         />
       )}
