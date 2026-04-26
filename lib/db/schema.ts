@@ -51,15 +51,12 @@ export const actionTypeEnum = pgEnum("action_type", [
 ]);
 
 export const brandEnum = pgEnum("brand", [
-  "vichy",
-  "cerave",
-  "la_roche_posay",
-  "skinceuticals",
-  "skinbetter",
-  "mixa",
-  "nyx",
-  "biotherm",
-  "medik8",
+  "nutricia",
+  "gallia",
+  "bledina",
+  "aptamil",
+  "evian",
+  "volvic",
   "other",
 ]);
 

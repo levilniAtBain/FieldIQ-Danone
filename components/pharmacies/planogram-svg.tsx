@@ -1,5 +1,5 @@
 export function PlanogramSvg() {
-  const lorealX = [14, 39, 64, 89, 114, 139];
+  const danoneX = [14, 39, 64, 89, 114, 139];
   const compX = [166, 191, 216, 238];
 
   const rows: Array<{ y: number; h: number; compH: number; compY: number }> = [
@@ -44,7 +44,7 @@ export function PlanogramSvg() {
 
       {/* ── Products ── */}
       {rows.map((row, ri) =>
-        lorealX.map((x, ci) => (
+        danoneX.map((x, ci) => (
           <rect key={`l${ri}-${ci}`} x={x} y={row.y} width={23} height={row.h} fill="#f59e0b" rx="2" />
         ))
       )}
@@ -79,7 +79,7 @@ export function PlanogramSvg() {
         ← Horizontal brand blocking →
       </text>
 
-      {/* ── TN display (end-cap, all L'Oréal) ── */}
+      {/* ── TN display (end-cap, all Danone) ── */}
       <rect x="318" y="48"  width="66" height="198" fill="none" stroke="#d1d5db" strokeWidth="2" rx="2" />
       <rect x="318" y="98"  width="66" height="4"   fill="#9ca3af" />
       <rect x="318" y="146" width="66" height="4"   fill="#9ca3af" />

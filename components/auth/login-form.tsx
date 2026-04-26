@@ -28,7 +28,7 @@ export function LoginForm() {
             "focus:ring-2 focus:ring-brand-500 focus:border-brand-500",
             "border-gray-200"
           )}
-          placeholder="you@loreal.com"
+          placeholder="you@danone.com"
         />
       </div>
 

@@ -1,7 +1,7 @@
 /**
- * GET /api/orders/[id]/export — download order as CSV for L'Oréal import
+ * GET /api/orders/[id]/export — download order as CSV for Danone import
  *
- * CSV format (standard L'Oréal order import):
+ * CSV format (standard Danone order import):
  *   SKU,ProductName,Brand,Quantity,UnitPrice,LineTotal
  */
 import { NextRequest, NextResponse } from "next/server";

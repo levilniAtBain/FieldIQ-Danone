@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FieldIQ — L'Oreal Field Force",
-  description: "Field sales intelligence for L'Oreal pharmacy accounts",
+  title: "FieldIQ — Danone Field Force",
+  description: "Field sales intelligence for Danone pharmacy accounts",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

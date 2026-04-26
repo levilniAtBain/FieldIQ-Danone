@@ -118,7 +118,7 @@ export function SpecialistCoordPanel({
       (action.description ? `Détails : ${action.description}\n` : "") +
       `\nDate souhaitée : ${dateStr}\n` +
       (notes ? `\nNotes : ${notes}\n` : "") +
-      `\nPourriez-vous confirmer votre disponibilité ?\n\nCordialement,\nFieldIQ — L'Oréal`
+      `\nPourriez-vous confirmer votre disponibilité ?\n\nCordialement,\nFieldIQ — Danone`
     );
     return `mailto:${spec.email}?subject=${subject}&body=${body}`;
   }

@@ -16,28 +16,22 @@ import {
 } from "recharts";
 
 const BRAND_COLORS: Record<string, string> = {
-  vichy: "#0057a8",
-  cerave: "#00843d",
-  la_roche_posay: "#e4002b",
-  skinceuticals: "#1a1a1a",
-  skinbetter: "#8b5cf6",
-  mixa: "#f59e0b",
-  nyx: "#000000",
-  biotherm: "#0ea5e9",
-  medik8: "#d97706",
+  nutricia: "#0088d4",
+  gallia: "#00843d",
+  bledina: "#f59e0b",
+  aptamil: "#e4002b",
+  evian: "#0ea5e9",
+  volvic: "#22c55e",
   other: "#9ca3af",
 };
 
 const BRAND_LABEL: Record<string, string> = {
-  vichy: "Vichy",
-  cerave: "CeraVe",
-  la_roche_posay: "La Roche-Posay",
-  skinceuticals: "SkinCeuticals",
-  skinbetter: "SkinBetter",
-  mixa: "Mixa",
-  nyx: "NYX",
-  biotherm: "Biotherm",
-  medik8: "Medik8",
+  nutricia: "Nutricia",
+  gallia: "Gallia",
+  bledina: "Blédina",
+  aptamil: "Aptamil",
+  evian: "Evian",
+  volvic: "Volvic",
   other: "Autre",
 };
 

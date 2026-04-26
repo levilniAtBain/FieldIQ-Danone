@@ -4,7 +4,7 @@ const RULES = [
   {
     color: "bg-amber-50 border-amber-200",
     title: "60% Share of Shelf",
-    body: "L'Oréal products must occupy ≥ 60% of the shelf space in the category.",
+    body: "Les produits Danone doivent occuper ≥ 60% de l'espace rayon dans la catégorie.",
   },
   {
     color: "bg-yellow-50 border-yellow-200",
@@ -14,12 +14,12 @@ const RULES = [
   {
     color: "bg-blue-50 border-blue-200",
     title: "Horizontal Blocking",
-    body: "Group all L'Oréal products in a continuous horizontal band — never split vertically.",
+    body: "Regrouper tous les produits Danone en bande horizontale continue — jamais divisés verticalement.",
   },
   {
     color: "bg-orange-50 border-orange-200",
     title: "TN Breakout",
-    body: "End-cap display 100% dedicated to L'Oréal top sellers. No competitor products.",
+    body: "Tête de gondole 100% dédiée aux best-sellers Danone. Aucun produit concurrent.",
   },
 ];
 
@@ -27,16 +27,16 @@ const SHELF_DETAILS = [
   {
     label: "Integrated shelf",
     items: [
-      "60% share of shelf — L'Oréal must occupy the majority",
-      "Face-out (FO) at eye level (1.2–1.5m)",
-      "Horizontal brand blocking — continuous L'Oréal section",
-      "TN breakout — end-cap 100% L'Oréal top sellers",
+      "60% de part de rayon — Danone doit occuper la majorité",
+      "Face-out (FO) à hauteur des yeux (1,2–1,5m)",
+      "Bloquage horizontal — section Danone continue",
+      "TN breakout — tête de gondole 100% Danone",
     ],
   },
   {
     label: "Brand / Solar / Deodorant shelf",
     items: [
-      "L'Oréal section must be ≥ competitor section",
+      "Section Danone ≥ section concurrente",
       "Apply the same FO and eye-level rules",
       "No competitor products on TN display",
     ],
@@ -96,12 +96,12 @@ export default function PlanogramPage() {
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="grid grid-cols-2 gap-2">
             {[
-              "Lipikar AP+M (10 pcs)",
-              "Effaclar Duo+M (10 pcs)",
-              "CeraVe Lait Hydratant (10 pcs)",
-              "Vichy Lifactiv (10 pcs)",
-              "Anthelios (La Roche-Posay)",
-              "UV Mune",
+              "Fortimel Protein 200ml (≥4 unités)",
+              "Fortimel Energy 200ml (≥4 unités)",
+              "Gallia Calisma 1er âge (≥2 boîtes)",
+              "Aptamil Pronutra 1 (≥2 boîtes)",
+              "Blédina Compotes 4x90g",
+              "Evian Bébé 6x50cl",
             ].map((sku) => (
               <div key={sku} className="flex items-center gap-2 text-xs text-gray-700">
                 <span className="w-2 h-2 rounded bg-amber-400 flex-shrink-0" />

@@ -1,4 +1,4 @@
-// Static PICOS checklist definition — single source of truth
+// Static PICOS checklist definition — single source of truth (Danone pharmacy channel)
 // Total max points = 125, normalized to 100 for display: score = Math.round(achieved / 125 * 100)
 
 export const PICOS_MAX_POINTS = 125;
@@ -20,145 +20,145 @@ export type ChecklistItem = {
 };
 
 export const SECTION_LABELS: Record<ChecklistSection, string> = {
-  main_shelf: "Main Shelf",
-  interruption: "Interruption Points",
-  overall_store: "Overall Store",
+  main_shelf: "Rayon principal",
+  interruption: "Points d'interruption",
+  overall_store: "Magasin global",
 };
 
 export const CHECKLIST_ITEMS: ChecklistItem[] = [
-  // ── Main Shelf ──────────────────────────────────────────────────────────────
+  // ── Rayon principal ─────────────────────────────────────────────────────────
   {
     id: "item_1",
     num: 1,
-    label: "Recommended SKUs are available, stocked and displayed on shelf",
+    label: "SKUs prioritaires disponibles, en stock et présentés en rayon",
     maxPoints: 20,
     section: "main_shelf",
     subItems: [
-      { id: "item_1_lipikar",  label: "Lipikar AP+M (10 pcs)" },
-      { id: "item_1_effaclar", label: "Effaclar duo+M (10 pcs)" },
-      { id: "item_1_cerave",   label: "CeraVe Lait hydratant (10 pcs)" },
-      { id: "item_1_vichy",    label: "Vichy Lifactiv (10 pcs)" },
+      { id: "item_1_fortimel_prot", label: "Fortimel Protein 200ml (≥4 unités)" },
+      { id: "item_1_fortimel_energy", label: "Fortimel Energy 200ml (≥4 unités)" },
+      { id: "item_1_gallia_calisma", label: "Gallia Calisma 1er âge (≥2 boîtes)" },
+      { id: "item_1_aptamil_1",     label: "Aptamil Pronutra 1 (≥2 boîtes)" },
     ],
   },
   {
     id: "item_2",
     num: 2,
-    label: "Main shelf is organised according to planogram",
+    label: "Rayon nutrition médicale organisé selon le planogramme",
     maxPoints: 15,
     section: "main_shelf",
     subItems: [
-      // Integrated shelf
-      { id: "item_2_share60",    label: "60% share of shelf" },
-      { id: "item_2_eyelevel",   label: "FO at eye level" },
-      { id: "item_2_blocking",   label: "Horizontal brand blocking" },
-      { id: "item_2_tn",         label: "TN breakout" },
-      // Brand shelf
-      { id: "item_2_b_larger",   label: "Brand shelf: Larger than competitor" },
-      { id: "item_2_b_atpar",    label: "Brand shelf: At par with competitor" },
-      { id: "item_2_b_smaller",  label: "Brand shelf: Smaller than competitor" },
-      { id: "item_2_b_noshelf",  label: "Brand shelf: No shelf" },
-      // Solar shelf
-      { id: "item_2_s_share60",  label: "Solar shelf: 60% share of shelf" },
-      { id: "item_2_s_eyelevel", label: "Solar shelf: FO at eye level" },
-      { id: "item_2_s_blocking", label: "Solar shelf: Horizontal brand blocking" },
-      { id: "item_2_s_tn",       label: "Solar shelf: TN breakout" },
-      // Deodorant shelf
-      { id: "item_2_d_share60",  label: "Deodorant shelf: 60% share of shelf" },
-      { id: "item_2_d_eyelevel", label: "Deodorant shelf: FO at eye level" },
-      { id: "item_2_d_blocking", label: "Deodorant shelf: Horizontal brand blocking" },
-      { id: "item_2_d_tn",       label: "Deodorant shelf: TN breakout" },
+      { id: "item_2_share60",    label: "≥60% de part de rayon Danone" },
+      { id: "item_2_eyelevel",   label: "Fortimel à hauteur des yeux (1,2–1,5m)" },
+      { id: "item_2_blocking",   label: "Bloquage horizontal par marque" },
+      { id: "item_2_tn",         label: "TN / tête de gondole Danone" },
+      // Rayon laits infantiles
+      { id: "item_2_b_larger",   label: "Rayon laits : plus grand que concurrent" },
+      { id: "item_2_b_atpar",    label: "Rayon laits : à parité avec concurrent" },
+      { id: "item_2_b_smaller",  label: "Rayon laits : plus petit que concurrent" },
+      { id: "item_2_b_noshelf",  label: "Rayon laits : absent" },
+      // Rayon petits pots / Blédina
+      { id: "item_2_s_share60",  label: "Rayon petits pots : ≥60% Danone" },
+      { id: "item_2_s_eyelevel", label: "Rayon petits pots : Blédina à hauteur des yeux" },
+      { id: "item_2_s_blocking", label: "Rayon petits pots : bloquage horizontal" },
+      { id: "item_2_s_tn",       label: "Rayon petits pots : TN Danone" },
+      // Rayon eaux
+      { id: "item_2_d_share60",  label: "Rayon eaux : Evian/Volvic ≥60%" },
+      { id: "item_2_d_eyelevel", label: "Rayon eaux : Evian bébé à hauteur des yeux" },
+      { id: "item_2_d_blocking", label: "Rayon eaux : bloquage horizontal" },
+      { id: "item_2_d_tn",       label: "Rayon eaux : TN Danone" },
     ],
   },
 
-  // ── Interruption Points ─────────────────────────────────────────────────────
+  // ── Points d'interruption ────────────────────────────────────────────────────
   {
     id: "item_3",
     num: 3,
-    label: "Display 1 is positioned according to PICOS",
+    label: "Display 1 positionné selon les standards PICOS",
     maxPoints: 10,
     section: "interruption",
     subItems: [
-      { id: "item_3_topseller",   label: "Top seller on additional display" },
-      { id: "item_3_crosscat",    label: "Cross category on display" },
-      { id: "item_3_nocompetition", label: "No competition products on display" },
+      { id: "item_3_topseller",     label: "Top seller sur le display additionnel" },
+      { id: "item_3_crosscat",      label: "Cross-catégorie sur le display" },
+      { id: "item_3_nocompetition", label: "Pas de produits concurrents sur le display" },
     ],
   },
   {
     id: "item_4",
     num: 4,
-    label: "Display 2 is positioned according to PICOS",
+    label: "Display 2 positionné selon les standards PICOS",
     maxPoints: 10,
     section: "interruption",
     subItems: [
-      { id: "item_4_topseller",   label: "Top seller on additional display" },
-      { id: "item_4_crosscat",    label: "Cross category on display" },
-      { id: "item_4_nocompetition", label: "No competition products on display" },
+      { id: "item_4_topseller",     label: "Top seller sur le display additionnel" },
+      { id: "item_4_crosscat",      label: "Cross-catégorie sur le display" },
+      { id: "item_4_nocompetition", label: "Pas de produits concurrents sur le display" },
     ],
   },
   {
     id: "item_5",
     num: 5,
-    label: "Display 3 is positioned according to PICOS",
+    label: "Display 3 positionné selon les standards PICOS",
     maxPoints: 10,
     section: "interruption",
     subItems: [
-      { id: "item_5_topseller",   label: "Top seller on additional display" },
-      { id: "item_5_crosscat",    label: "Cross category on display" },
-      { id: "item_5_nocompetition", label: "No competition products on display" },
+      { id: "item_5_topseller",     label: "Top seller sur le display additionnel" },
+      { id: "item_5_crosscat",      label: "Cross-catégorie sur le display" },
+      { id: "item_5_nocompetition", label: "Pas de produits concurrents sur le display" },
     ],
   },
 
-  // ── Overall Store ───────────────────────────────────────────────────────────
+  // ── Magasin global ───────────────────────────────────────────────────────────
   {
     id: "item_6",
     num: 6,
-    label: "Brand is visible in front window",
+    label: "Marque visible en vitrine",
     maxPoints: 10,
     section: "overall_store",
     subItems: [
-      { id: "item_6_larger",  label: "Larger than competitor" },
-      { id: "item_6_atpar",   label: "At par with competitor" },
-      { id: "item_6_smaller", label: "Smaller than competitor" },
-      { id: "item_6_nopresence", label: "No presence" },
+      { id: "item_6_larger",    label: "Plus visible que le concurrent" },
+      { id: "item_6_atpar",     label: "À parité avec le concurrent" },
+      { id: "item_6_smaller",   label: "Moins visible que le concurrent" },
+      { id: "item_6_nopresence", label: "Pas de présence en vitrine" },
     ],
   },
   {
     id: "item_7",
     num: 7,
-    label: "Shelf is positioned according to PICOS",
+    label: "Rayon nutrition médicale positionné selon PICOS",
     maxPoints: 10,
     section: "overall_store",
     subItems: [
-      { id: "item_7_2m", label: "Within 2m from counter" },
+      { id: "item_7_2m",       label: "Dans les 2m du comptoir / espace conseil" },
+      { id: "item_7_signaled", label: "Balisage Danone visible depuis le couloir" },
     ],
   },
   {
     id: "item_8",
     num: 8,
-    label: "Communication is displayed as per guidelines",
+    label: "Communication affichée selon les directives",
     maxPoints: 10,
     section: "overall_store",
     subItems: [
-      { id: "item_8_pos2",   label: "At least 2 POS materials with call-to-action aligned to suggested SKUs" },
-      { id: "item_8_price",  label: "All price tags present, readable and positioned near related SKU" },
+      { id: "item_8_pos2",  label: "≥2 supports PLV avec call-to-action aligné aux SKUs recommandés" },
+      { id: "item_8_price", label: "Toutes les étiquettes prix présentes et lisibles" },
     ],
   },
   {
     id: "item_9",
     num: 9,
-    label: "POS staff have been trained as per calendar",
+    label: "Personnel POS formé selon le calendrier",
     maxPoints: 10,
     section: "overall_store",
     subItems: [
-      { id: "item_9_elearning",  label: "POS staff is on track with e-learning modules" },
-      { id: "item_9_evenings",   label: "POS staff attended 80% of evening sessions" },
-      { id: "item_9_detailing",  label: "Detailing material is clearly visible in store" },
+      { id: "item_9_elearning",  label: "Personnel POS à jour sur les modules e-learning" },
+      { id: "item_9_evenings",   label: "Participation ≥80% aux sessions du soir" },
+      { id: "item_9_detailing",  label: "Matériel de détailing Danone visible en réserve" },
     ],
   },
   {
     id: "item_10",
     num: 10,
-    label: "POS staff NPS on brand above threshold",
+    label: "NPS du personnel POS sur la marque au-dessus du seuil",
     maxPoints: 10,
     section: "overall_store",
     subItems: [
@@ -168,17 +168,17 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "item_11",
     num: 11,
-    label: "Promos are implemented in line with guidelines",
+    label: "Promos mises en place conformément aux directives",
     maxPoints: 10,
     section: "overall_store",
     subItems: [
-      { id: "item_11_noiffo",  label: "No promotions on IF/FO" },
-      { id: "item_11_posters", label: "SKU X promo posters visible" },
+      { id: "item_11_noiffo",  label: "Pas de promotions sur IF/FO (nutrition médicale)" },
+      { id: "item_11_posters", label: "Affiches promo Fortimel / Gallia visibles" },
     ],
   },
 ];
 
-// ── PICOS Pillars ─────────────────────────────────────────────────────────────
+// ── Piliers PICOS ────────────────────────────────────────────────────────────
 
 export type PillarId = "availability" | "visibility" | "brand_experience" | "advocacy";
 
@@ -190,19 +190,19 @@ export const PICOS_PILLARS: Array<{
 }> = [
   {
     id: "availability",
-    label: "Availability",
+    label: "Disponibilité",
     itemIds: ["item_1"],
     barColor: "bg-green-500",
   },
   {
     id: "visibility",
-    label: "Visibility",
+    label: "Visibilité",
     itemIds: ["item_2", "item_3", "item_4", "item_5", "item_6", "item_7"],
     barColor: "bg-blue-500",
   },
   {
     id: "brand_experience",
-    label: "Brand experience",
+    label: "Expérience marque",
     itemIds: ["item_8", "item_9"],
     barColor: "bg-violet-500",
   },
@@ -267,10 +267,10 @@ export function generateAuditSummary(
   picosScore: number
 ): string {
   const status =
-    picosScore >= 80 ? "strong compliance"
-    : picosScore >= 60 ? "good progress but room for improvement"
-    : picosScore >= 40 ? "partial compliance — several areas need attention"
-    : "significant gaps across the store";
+    picosScore >= 80 ? "forte conformité PICOS"
+    : picosScore >= 60 ? "bonne progression mais des améliorations possibles"
+    : picosScore >= 40 ? "conformité partielle — plusieurs zones à améliorer"
+    : "écarts significatifs sur l'ensemble du point de vente";
 
   const passing: string[] = [];
   const failing: string[] = [];
@@ -288,14 +288,14 @@ export function generateAuditSummary(
   }
 
   const parts: string[] = [];
-  parts.push(`PICOS score ${picosScore}/100 — ${status}.`);
+  parts.push(`Score PICOS ${picosScore}/100 — ${status}.`);
 
   if (passing.length > 0) {
-    parts.push(`\nWhat's working:\n${passing.join("\n")}`);
+    parts.push(`\nPoints forts :\n${passing.join("\n")}`);
   }
 
   if (failing.length > 0) {
-    parts.push(`\nNeeds improvement:\n${failing.join("\n")}`);
+    parts.push(`\nAxes d'amélioration :\n${failing.join("\n")}`);
   }
 
   return parts.join("\n");

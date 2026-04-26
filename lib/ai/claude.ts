@@ -109,7 +109,7 @@ export async function streamPreVisitBriefing(
   onChunk: (text: string) => void,
   onDone: () => void
 ): Promise<void> {
-  const prompt = `You are a field sales intelligence assistant for L'Oréal. Generate a concise pre-visit briefing for the following pharmacy account.
+  const prompt = `You are a field sales intelligence assistant for Danone. Generate a concise pre-visit briefing for the following pharmacy account.
 
 Account details:
 - Name: ${context.pharmacyName}
@@ -127,7 +127,7 @@ Account details:
 Write a focused briefing (3-4 short paragraphs) covering:
 1. Account status and relationship context
 2. Key priorities for this visit based on history
-3. Recommended L'Oréal products or promotions to discuss (Vichy, CeraVe, La Roche-Posay, SkinCeuticals, etc.)
+3. Recommended Danone products or promotions to discuss (Nutricia Fortimel, Gallia, Aptamil, Blédina, Evian, Volvic, etc.)
 4. Any specific follow-ups from the last visit
 
 Keep it practical and actionable. Write in English.`;
@@ -176,7 +176,7 @@ export async function analyzeShelfPhoto(
             type: "text",
             text: `Analyze this pharmacy shelf photo for ${pharmacyContext.name} (${pharmacyContext.tier} tier, ${pharmacyContext.segment ?? "general"} segment).
 
-Focus on L'Oréal brands: Vichy, CeraVe, La Roche-Posay, SkinCeuticals, SkinBetter, Mixa, NYX, Biotherm, Medik8.
+Focus on Danone brands: Nutricia (Fortimel, Nutrison), Gallia, Aptamil, Blédina, Evian, Volvic.
 
 Return a JSON object with this exact structure:
 {
@@ -383,7 +383,7 @@ export async function matchCsvLinesToProducts(
       messages: [
         {
           role: "user",
-          content: `Match each pharmacy product to the closest L'Oréal catalog entry. These are French pharmacy system exports (Winpharma/LGPI) — product names may be truncated or abbreviated.
+          content: `Match each pharmacy product to the closest Danone catalog entry. These are French pharmacy system exports (Winpharma/LGPI) — product names may be truncated or abbreviated.
 
 Catalog (SKU | Name | Brand):
 ${catalogList}
@@ -483,7 +483,7 @@ export async function buildOrderWithAI(context: OrderBuilderContext): Promise<Ai
       }).join("\n\n")
     : "  No shelf photos taken";
 
-  const prompt = `You are a field sales assistant for L'Oréal. Build a pharmacy replenishment order for ${context.pharmacyName}.
+  const prompt = `You are a field sales assistant for Danone. Build a pharmacy replenishment order for ${context.pharmacyName}.
 
 Available products (SKU — Name — Brand):
 ${skuList}
@@ -527,7 +527,7 @@ Instructions:
    - High sell-out + adequate stock → small top-up only
    - Low/zero sell-out + high stock → skip or reduce significantly
    - Product in sell-out but absent from stock → likely stockout, high priority
-4. Apply any adjustments mentioned in scanned notes or voice (e.g. "add 2 more CeraVe", "skip Vichy this time")
+4. Apply any adjustments mentioned in scanned notes or voice (e.g. "add 2 more Fortimel", "skip Gallia this time")
 5. Consider peer suggestions for products not covered by sell-out or history
 6. Only include SKUs from the available products list
 7. Provide a brief rationale for each line, noting when driven by sell-out/stock data
@@ -535,8 +535,8 @@ Instructions:
 Return JSON only — no markdown:
 {
   "lines": [
-    { "sku": "CER-001", "quantity": 6, "rationale": "same as last order", "source": "history" },
-    { "sku": "LRP-001", "quantity": 3, "rationale": "added per voice note request", "source": "voice" }
+    { "sku": "DAN-NUT-FORTPROT-VAN-200ML4", "quantity": 6, "rationale": "same as last order", "source": "history" },
+    { "sku": "DAN-GAL-CALISMA1-800G", "quantity": 3, "rationale": "added per voice note request", "source": "voice" }
   ],
   "summary": "One sentence describing the order",
   "warnings": ["any items from notes that couldn't be matched to a SKU"]
@@ -582,7 +582,7 @@ export async function streamVisitReport(
   onChunk: (text: string) => void,
   onDone: () => void
 ): Promise<void> {
-  const prompt = `You are a field sales assistant for L'Oréal. Generate a professional visit report for Salesforce.
+  const prompt = `You are a field sales assistant for Danone. Generate a professional visit report for Salesforce.
 
 Visit details:
 - Pharmacy: ${context.pharmacyName}
@@ -633,7 +633,7 @@ export async function suggestVisitObjectives(
     messages: [
       {
         role: "user",
-        content: `You are a field sales intelligence assistant for L'Oréal. Based on this pharmacy account, suggest 3-5 concrete visit objectives for the sales rep.
+        content: `You are a field sales intelligence assistant for Danone. Based on this pharmacy account, suggest 3-5 concrete visit objectives for the sales rep.
 
 Account:
 - Name: ${context.pharmacyName}
@@ -646,7 +646,7 @@ Account:
 - Account notes: ${context.notes ?? "none"}
 - Pending actions: ${context.pendingActions.length > 0 ? context.pendingActions.join("; ") : "none"}
 
-Return a JSON array of objective strings. Each objective should be concrete and actionable (e.g. "Present CeraVe Hydrating Cleanser and secure a trial order"). Return only valid JSON, no markdown.
+Return a JSON array of objective strings. Each objective should be concrete and actionable (e.g. "Present Fortimel Protein range and secure a trial order of 4-pack"). Return only valid JSON, no markdown.
 Example: ["Objective 1", "Objective 2", "Objective 3"]`,
       },
     ],
@@ -698,7 +698,7 @@ export async function evaluateVisitObjectives(params: {
     messages: [
       {
         role: "user",
-        content: `You are a field sales manager for L'Oréal evaluating a rep's visit. Based on the visit data, assess whether each objective was met.
+        content: `You are a field sales manager for Danone evaluating a rep's visit. Based on the visit data, assess whether each objective was met.
 
 Visit objectives:
 ${params.objectives.map((o, i) => `${i + 1}. ${o}`).join("\n")}
@@ -771,7 +771,7 @@ export interface NextBestActionsContext {
 export async function generateNextBestActions(
   context: NextBestActionsContext
 ): Promise<NextBestAction[]> {
-  const prompt = `You are a field sales intelligence assistant for L'Oréal. Generate 3-5 next best actions for a pharmacy sales rep.
+  const prompt = `You are a field sales intelligence assistant for Danone. Generate 3-5 next best actions for a pharmacy sales rep.
 
 Account context:
 - Pharmacy: ${context.pharmacyName}, ${context.city}
@@ -790,15 +790,15 @@ Available action types:
 - "promo": Promotional offer to present (seasonal campaigns, volume discounts)
 - "bundle": Bundle deal proposal (multi-product packaging)
 - "animation": In-store animation or display event
-- "specialist_visit": Schedule a visit from an L'Oréal product specialist (MV — Visiteur Médical) to support the pharmacy team with product expertise and shelf assessment
-- "product_intro": Introduce a new L'Oréal product range (Vichy, CeraVe, La Roche-Posay, SkinCeuticals, SkinBetter, Mixa, NYX, Biotherm, Medik8)
-- "training": Training session for pharmacy staff on product knowledge
+- "specialist_visit": Schedule a visit from a Danone product specialist (diététicien, conseiller médical) to support the pharmacy team with product expertise and shelf assessment
+- "product_intro": Introduce a new Danone product range (Nutricia Fortimel, Gallia, Aptamil, Blédina, Evian, Volvic)
+- "training": Training session for pharmacy staff on product knowledge (medical nutrition, infant formula, etc.)
 
 Instructions:
-1. Prioritise actions relevant to the ${context.season} season (spring = sun care, skin renewal; summer = sun protection; autumn = hydration, repair; winter = rich moisturisers, lip care)
+1. Prioritise actions relevant to the ${context.season} season (spring = baby formula stock-up, Evian/Volvic refresh; summer = hydration, Evian promotion; autumn = medical nutrition review, back-to-school; winter = immune support, Fortimel range)
 2. Segment A & B accounts should receive higher-value, more strategic actions; Seg C focuses on development; Seg D digital-only
 3. If shelf score is below 6 or not assessed, prioritise a specialist_visit action
-4. Suggest concrete, named L'Oréal products where relevant
+4. Suggest concrete, named Danone products where relevant
 5. If dueAt is relevant, suggest a date within the next 30-60 days in ISO format (YYYY-MM-DD), otherwise null
 ${context.specialistVisitNeeded ? "6. MUST include at least one specialist_visit action" : ""}
 
@@ -806,8 +806,8 @@ Return a JSON array only — no markdown, no explanation:
 [
   {
     "type": "promo",
-    "title": "Spring Sun Care Launch — Vichy Capital Soleil",
-    "description": "Present the new Vichy Capital Soleil UV-Age Daily SPF50+ ahead of summer. Pharmacy eligible for 15% launch discount on first order of 12+ units.",
+    "title": "Lancement Fortimel Protein — offre de lancement",
+    "description": "Présenter la gamme Fortimel Protein avant la saison hivernale. Remise de 15% sur la première commande de 12 unités ou plus.",
     "dueAt": "2026-04-30"
   }
 ]`;
@@ -908,12 +908,12 @@ export async function analyzePerfectStoreShelf(
           },
           {
             type: "text",
-            text: `Analyze this L'Oréal Perfect Store audit photo.
+            text: `Analyze this Danone Perfect Store audit photo.
 Pharmacy: ${pharmacyContext.name} (Segment ${pharmacyContext.tier?.toUpperCase()}, ${pharmacyContext.segment ?? "general"})
 Shelf section: ${sectionLabel}
 
-Core L'Oréal products to track: Lipikar AP+M (La Roche-Posay), Effaclar Duo+M (La Roche-Posay), CeraVe Lait Hydratant, Vichy Lifactiv, Anthelios/UV Mune (La Roche-Posay), Vichy Minéral 89.
-Brands: La Roche-Posay, CeraVe, Vichy, SkinCeuticals, SkinBetter, Mixa.
+Core Danone products to track: Fortimel Protein 200ml, Fortimel Energy 200ml, Gallia Calisma 1er âge, Aptamil Pronutra 1, Blédina compotes, Evian bébé.
+Brands: Nutricia, Gallia, Aptamil, Blédina, Evian, Volvic.
 
 Return a JSON object with exactly this structure:
 {
@@ -936,12 +936,12 @@ Return a JSON object with exactly this structure:
 }
 
 KPI definitions:
-- shareOfShelf: % of visible shelf space occupied by L'Oréal brands (0-100), null if not assessable
-- extraDisplay: number of secondary/additional display locations visible for L'Oréal (integer), null if none
+- shareOfShelf: % of visible shelf space occupied by Danone brands (0-100), null if not assessable
+- extraDisplay: number of secondary/additional display locations visible for Danone (integer), null if none
 - coreOnShelfAvailability: % of core SKUs (listed above) present and stocked (0-100), null if not assessable
-- numberOfFacings: total number of L'Oréal facings visible (integer), null if not assessable
+- numberOfFacings: total number of Danone facings visible (integer), null if not assessable
 - qualityOfPositioning: overall quality score 1-10 (eye level, visibility, grouping), null if not assessable
-- shareOfAssortment: % of L'Oréal SKUs visible vs total dermocosmetic SKUs on shelf (0-100), null if not assessable
+- shareOfAssortment: % of Danone SKUs visible vs total category SKUs on shelf (0-100), null if not assessable
 
 checklistSuggestions: list ONLY the sub-item IDs from this list that appear to be satisfied based on what you can see:
 ${relevantSubItemIds.join(", ")}
@@ -963,5 +963,111 @@ Return only valid JSON, no markdown.`,
   } catch (e) {
     console.error("[ps-shelf] Parse failed. Raw:", textBlock.text.slice(0, 800));
     throw new Error(`Failed to parse Perfect Store shelf analysis: ${(e as Error).message}`);
+  }
+}
+
+// ─── Store Layout Analysis ────────────────────────────────────────────────────
+
+export type StoreZone = {
+  id: string;
+  type: "shelf" | "counter" | "entrance" | "gondola" | "end_cap" | "window" | "alley" | "display";
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  currentContent: string;
+  picosStatus: "ideal" | "needs_work" | "missing" | "neutral";
+  picosPlacement: string | null;
+  priority: "high" | "medium" | "low" | "none";
+};
+
+export type StoreLayoutAnalysis = {
+  zones: StoreZone[];
+  storeSummary: string;
+  keyActions: Array<{ text: string; zoneId: string | null }>;
+};
+
+export async function analyzeStoreLayout(
+  imageBase64: string,
+  mimeType: "image/jpeg" | "image/png" | "image/webp",
+  pharmacyContext: { name: string; tier: string; segment: string | null }
+): Promise<StoreLayoutAnalysis> {
+  const response = await client.messages.create({
+    model: "claude-opus-4-6",
+    max_tokens: 4096,
+    thinking: { type: "adaptive" },
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mimeType, data: imageBase64 },
+          },
+          {
+            type: "text",
+            text: `You are a retail merchandising AI for Danone field reps. Analyze this pharmacy interior photo and extract a schematic floor plan viewed from above.
+
+Pharmacy: ${pharmacyContext.name} (Tier ${pharmacyContext.tier.toUpperCase()}, ${pharmacyContext.segment ?? "general"} segment)
+
+Identify every distinct physical zone visible — shelving runs, counters, entrance/exit, gondolas (free-standing double-sided shelves), end-caps (shelf-end displays), windows, alleys, and display fixtures.
+
+For each zone:
+1. Estimate normalized coordinates (x, y, w, h) on a 0–100 scale as if viewing from directly above. x/y = top-left corner. The entrance should be near the bottom (y ≈ 80–90). The back of the store should be near the top (y ≈ 0–20).
+2. Note what Danone brands or competitor products are currently visible (or "unknown" if unclear).
+3. Assess PICOS compliance:
+   - "ideal": Danone products correctly placed, full share of shelf, good visibility
+   - "needs_work": Danone present but misplaced, insufficient share, or competitor-dominated
+   - "missing": Zone should have Danone products per PICOS but none visible
+   - "neutral": Zone not relevant for Danone PICOS placement (alley, entrance, restroom)
+4. If "needs_work" or "missing", write a specific actionable PICOS recommendation for the rep.
+5. Assign priority: "high" (immediate revenue/visibility impact), "medium", "low", or "none".
+
+Danone PICOS rules to apply:
+- Medical nutrition shelf (Nutricia): Danone must occupy ≥60% share; Fortimel Protein & Energy at eye-level (1.2–1.5m); apply horizontal brand blocking
+- Infant formula shelf (Gallia/Aptamil): Danone section must be ≥ competitor section; Gallia Calisma & Aptamil Pronutra at eye-level
+- Counter/checkout: Fortimel display unit within reach of checkout, with price tags and promo
+- Gondola end-caps: 100% Danone top sellers only — no competitor sharing
+- Core SKUs to track: Fortimel Protein 200ml, Fortimel Energy 200ml, Gallia Calisma 1er âge, Aptamil Pronutra 1, Blédina compotes, Evian bébé
+
+Identify 3–5 key PICOS actions the rep must take today, ordered by priority.
+
+Return ONLY a valid JSON object — no markdown, no prose:
+{
+  "zones": [
+    {
+      "id": "zone_1",
+      "type": "shelf",
+      "label": "Rayon Nutrition Médicale",
+      "x": 5, "y": 10, "w": 55, "h": 12,
+      "currentContent": "Fortimel visible, concurrents sur rangée eye-level",
+      "picosStatus": "needs_work",
+      "picosPlacement": "Repositionner Fortimel Protein à la rangée eye-level (2-3). Appliquer la règle des 60% de part de rayon.",
+      "priority": "high"
+    }
+  ],
+  "storeSummary": "2-3 sentence description of the pharmacy layout and overall PICOS compliance level.",
+  "keyActions": [
+    { "text": "Revendiquer 60% du rayon nutrition médicale avec bloquage horizontal Danone", "zoneId": "zone_1" },
+    { "text": "Installer un display Fortimel au comptoir caisse", "zoneId": "counter_1" }
+  ]
+}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from store layout analysis");
+  }
+
+  try {
+    return JSON.parse(extractJson(textBlock.text)) as StoreLayoutAnalysis;
+  } catch (e) {
+    console.error("[store-layout] Parse failed. Raw:", textBlock.text.slice(0, 800));
+    throw new Error(`Failed to parse store layout analysis: ${(e as Error).message}`);
   }
 }

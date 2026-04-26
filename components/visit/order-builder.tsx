@@ -419,7 +419,7 @@ export function OrderBuilder({
           <textarea
             value={typedNotes}
             onChange={(e) => setTypedNotes(e.target.value)}
-            placeholder={`e.g. "pharmacist wants 3 more CeraVe cream, skip Vichy this month, add Medik8 retinal"`}
+            placeholder={`e.g. "pharmacist wants 3 more Fortimel, skip Gallia this month, add Aptamil Pronutra"`}
             rows={3}
             className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none"
           />
@@ -688,13 +688,13 @@ export function OrderBuilder({
           <button
             onClick={exportCsv}
             className="flex items-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 text-sm text-gray-600 hover:border-gray-300 transition-colors"
-            title="Download CSV for L'Oréal import"
+            title="Download CSV for Danone import"
           >
             <Download size={14} /> CSV
           </button>
         </div>
         <p className="text-xs text-gray-400 text-center">
-          CSV export is compatible with L'Oréal order import systems
+          CSV export is compatible with Danone order import systems
         </p>
       </div>
     );
@@ -716,7 +716,7 @@ export function OrderBuilder({
             onClick={exportCsv}
             className="inline-flex items-center gap-1.5 text-sm text-brand-600 font-medium hover:underline"
           >
-            <Download size={14} /> Download CSV for L'Oréal import
+            <Download size={14} /> Download CSV for Danone import
           </button>
         )}
         <button

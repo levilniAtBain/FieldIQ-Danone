@@ -13,11 +13,11 @@ export const SEGMENT_CONFIG = {
     headerBg: "bg-teal-50 border-teal-200",
     pharmacies: "~2,000 pts",
     marketShare: "~20%",
-    criteria: "High dermocosmetic turnover · Urban affluent",
+    criteria: "Fort chiffre d'affaires nutrition · Urbain aisé",
     picos: "Full PICOS · PICOS tailored by commercial cycle",
     visitFreq: "Weekly",
     coverage: "Sales Reps + Merchandizer",
-    brands: "La Roche-Posay · CeraVe · Vichy · Skinceuticals",
+    brands: "Nutricia · Gallia · Aptamil · Blédina",
   },
   b: {
     label: "Seg B",
@@ -32,7 +32,7 @@ export const SEGMENT_CONFIG = {
     picos: "Light PICOS – PICOS tailored by commercial cycle",
     visitFreq: "By-Weekly",
     coverage: "Sales Reps – Merchandizer on-need",
-    brands: "La Roche-Posay · CeraVe · Vichy",
+    brands: "Nutricia · Gallia · Aptamil",
   },
   c: {
     label: "Seg C",
@@ -47,7 +47,7 @@ export const SEGMENT_CONFIG = {
     picos: "Simplified PICOS · not tailored to commercial cycle",
     visitFreq: "Monthly",
     coverage: "Sales Reps",
-    brands: "La Roche-Posay · CeraVe · Vichy",
+    brands: "Nutricia · Gallia · Aptamil",
   },
   d: {
     label: "Seg D",
@@ -62,7 +62,7 @@ export const SEGMENT_CONFIG = {
     picos: "PICOS sent to pharmacists",
     visitFreq: "Not Visited",
     coverage: "Not visited",
-    brands: "La Roche-Posay · CeraVe · Vichy",
+    brands: "Nutricia · Gallia · Aptamil",
   },
 } as const;
 
@@ -142,7 +142,7 @@ export function SegmentBadge({ tier, className }: { tier: string; className?: st
                 { label: "PICOS",       value: seg.picos },
                 { label: "Visit freq.", value: seg.visitFreq },
                 { label: "Coverage",    value: seg.coverage },
-                { label: "LDB brands",  value: seg.brands },
+                { label: "Marques Danone",  value: seg.brands },
               ].map(({ label, value }) => (
                 <div key={label} className="flex gap-2">
                   <span className="text-xs text-gray-400 w-16 flex-shrink-0">{label}</span>

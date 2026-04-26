@@ -52,7 +52,7 @@ export function PlanogramGuideButton() {
                 {
                   color: "bg-amber-50 border-amber-200",
                   title: "60% Share of Shelf",
-                  body: "L'Oréal products must occupy ≥ 60% of the shelf space in the category.",
+                  body: "Les produits Danone doivent occuper ≥ 60% de l'espace rayon.",
                 },
                 {
                   color: "bg-yellow-50 border-yellow-200",
@@ -62,12 +62,12 @@ export function PlanogramGuideButton() {
                 {
                   color: "bg-blue-50 border-blue-200",
                   title: "Horizontal Blocking",
-                  body: "Group all L'Oréal products in a continuous horizontal band — never split vertically.",
+                  body: "Regrouper tous les produits Danone en bande horizontale — jamais divisés verticalement.",
                 },
                 {
                   color: "bg-orange-50 border-orange-200",
                   title: "TN Breakout",
-                  body: "End-cap display 100% dedicated to L'Oréal top sellers. No competitor products.",
+                  body: "Tête de gondole 100% dédiée aux best-sellers Danone. Aucun produit concurrent.",
                 },
               ].map((rule) => (
                 <div key={rule.title} className={`rounded-lg border p-2.5 ${rule.color}`}>

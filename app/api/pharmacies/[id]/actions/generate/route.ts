@@ -88,7 +88,7 @@ export async function POST(
         ? `It has been ${daysSinceLastVisit} days since the last visit. A specialist visit is recommended to maintain the relationship and support the pharmacy team.`
         : shelfAnalysis?.overallScore !== undefined
         ? `Shelf score is ${shelfAnalysis.overallScore}/10. A specialist visit is recommended to improve product placement and provide pharmacist training.`
-        : "No visits recorded yet. A specialist visit is recommended to establish the L'Oréal presence at this pharmacy.",
+        : "No visits recorded yet. A specialist visit is recommended to establish the Danone presence at this pharmacy.",
       dueAt,
     });
   }

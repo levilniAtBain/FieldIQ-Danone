@@ -14,15 +14,12 @@ import {
 } from "recharts";
 
 const BRAND_COLORS: Record<string, string> = {
-  vichy: "#0057a8",
-  cerave: "#00843d",
-  la_roche_posay: "#e4002b",
-  skinceuticals: "#1a1a1a",
-  skinbetter: "#8b5cf6",
-  mixa: "#f59e0b",
-  nyx: "#000000",
-  biotherm: "#0ea5e9",
-  medik8: "#d97706",
+  nutricia: "#0088d4",
+  gallia: "#00843d",
+  bledina: "#f59e0b",
+  aptamil: "#e4002b",
+  evian: "#0ea5e9",
+  volvic: "#22c55e",
   other: "#9ca3af",
 };
 
@@ -81,9 +78,9 @@ export function AnalyticsView({
               <Line
                 type="monotone"
                 dataKey="visits"
-                stroke="#a21caf"
+                stroke="#0088d4"
                 strokeWidth={2}
-                dot={{ fill: "#a21caf", r: 3 }}
+                dot={{ fill: "#0088d4", r: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>

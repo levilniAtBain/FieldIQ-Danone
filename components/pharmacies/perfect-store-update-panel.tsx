@@ -14,10 +14,10 @@ import { PlanogramGuideButton } from "./planogram-guide-modal";
 type ShelfSection = "main" | "brand" | "solar" | "deodorant";
 
 const SHELF_SECTIONS: { id: ShelfSection; label: string; description: string }[] = [
-  { id: "main", label: "Main Shelf", description: "Integrated dermo-cosmetic shelf" },
-  { id: "brand", label: "Brand Shelf", description: "L'Oréal brand-dedicated gondola" },
-  { id: "solar", label: "Solar Shelf", description: "Sun care / solar products shelf" },
-  { id: "deodorant", label: "Deodorant Shelf", description: "Deodorant section" },
+  { id: "main", label: "Rayon Nutrition Médicale", description: "Rayon Nutricia / Fortimel" },
+  { id: "brand", label: "Rayon Laits Infantiles", description: "Gondole Gallia / Aptamil dédiée" },
+  { id: "solar", label: "Rayon Petits Pots", description: "Rayon Blédina bébé" },
+  { id: "deodorant", label: "Rayon Eaux", description: "Rayon Evian / Volvic" },
 ];
 
 type PhotoAnalysis = {

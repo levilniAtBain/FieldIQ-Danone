@@ -3,14 +3,14 @@
 @theme {
   --radius: 0.625rem;
 
-  /* Brand (L'Oreal purple) */
-  --color-brand-50: #fdf2f8;
-  --color-brand-100: #fce7f3;
-  --color-brand-200: #f9a8d4;
-  --color-brand-500: #c026d3;
-  --color-brand-600: #a21caf;
-  --color-brand-700: #86198f;
-  --color-brand-900: #4a044e;
+  /* Brand (Danone blue) */
+  --color-brand-50: #e8f4fd;
+  --color-brand-100: #bde0f9;
+  --color-brand-200: #7bbff3;
+  --color-brand-500: #009fd4;
+  --color-brand-600: #0088d4;
+  --color-brand-700: #006fb3;
+  --color-brand-900: #003f6b;
 
   /* Status */
   --color-success-50: #f0fdf4;

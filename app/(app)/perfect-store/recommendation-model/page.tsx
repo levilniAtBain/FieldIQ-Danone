@@ -2,12 +2,12 @@ import { BrainCircuit } from "lucide-react";
 
 // ── Advocacy Funnel ──────────────────────────────────────────────────────────
 const FUNNEL_STEPS = [
-  { n: 1, label: "Unaware",      desc: "No knowledge of LDB science",       circle: "bg-gray-500",    bg: "bg-gray-50",    text: "text-gray-700" },
+  { n: 1, label: "Unaware",      desc: "No knowledge of Danone science nutritionnelle",       circle: "bg-gray-500",    bg: "bg-gray-50",    text: "text-gray-700" },
   { n: 2, label: "Aware",        desc: "Knows the brand, not the proof",     circle: "bg-gray-700",    bg: "bg-gray-100",   text: "text-gray-800" },
   { n: 3, label: "Educated",     desc: "Understands clinical evidence",      circle: "bg-violet-700",  bg: "bg-violet-100", text: "text-violet-900" },
   { n: 4, label: "Convinced",    desc: "Believes in product efficacy",       circle: "bg-teal-600",    bg: "bg-teal-100",   text: "text-teal-900" },
   { n: 5, label: "Recommending", desc: "Actively advises patients",          circle: "bg-green-600",   bg: "bg-green-100",  text: "text-green-900" },
-  { n: 6, label: "",             desc: "LDB is the go-to brand",             circle: "bg-green-700",   bg: "bg-green-200",  text: "text-green-900" },
+  { n: 6, label: "",             desc: "Danone est la référence en pharmacie",             circle: "bg-green-700",   bg: "bg-green-200",  text: "text-green-900" },
 ];
 
 // ── Audience & Visit Cards ───────────────────────────────────────────────────
@@ -35,9 +35,9 @@ const CARDS: CardData[] = [
     accentBg: "bg-violet-50",
     sections: [
       { label: "Key motivation", content: "Business growth, patient loyalty, category leadership", highlight: true },
-      { label: "Core narrative", content: "LDB = the dermocosmetics category leader. Recommending LDB drives revenue AND patient satisfaction." },
+      { label: "Core narrative", content: "Danone = le leader de la nutrition médicale et pédiatrique en pharmacie. Recommander Danone génère du CA ET satisfait les patients." },
       { label: "Evidence used", content: "Market share data, category uplift proof, patient satisfaction surveys, clinical summary card" },
-      { label: "Ask / commitment", content: '"Will you commit to recommending La Roche-Posay as first choice for eczema & sensitive skin?"', highlight: true },
+      { label: "Ask / commitment", content: '"Will you commit to recommending Nutricia Fortimel as first choice for malnutrition risk patients?"', highlight: true },
       { label: "Long visit format", content: "30 min structured detailing: business review → clinical briefing → joint recommendation commitment → PICOS target" },
       { label: "Frequency", content: "Monthly (Seg A) · Quarterly (Seg B)" },
     ],
@@ -52,7 +52,7 @@ const CARDS: CardData[] = [
     accentBg: "bg-teal-50",
     sections: [
       { label: "Key motivation", content: "Helping patients, feeling expert, confidence at the counter", highlight: true },
-      { label: "Core narrative", content: '"When a patient asks for something for sensitive skin — LDB is your first reflex. Here\'s why it works."' },
+      { label: "Core narrative", content: '"When a patient asks for something for sensitive skin — Danone est votre premier réflexe. Here\'s why it works."' },
       { label: "Evidence used", content: "Simple product card (1 page), before/after visuals, patient profile matching tool, key ingredient story" },
       { label: "Ask / commitment", content: '"Can you recommend Cicaplast B5 for post-procedure care next week?" (one brand, one occasion)', highlight: true },
       { label: "Long visit format", content: "20 min sell-out training: product focus → patient typology match → recommendation role-play → leave-behind" },
@@ -69,9 +69,9 @@ const CARDS: CardData[] = [
     accentBg: "bg-blue-50",
     sections: [
       { label: "Goal", content: "Build deep conviction, close a recommendation commitment on 1–2 priority brands", highlight: true },
-      { label: "Narrative arc", content: "① Situation (patient need) → ② Problem (current gap) → ③ LDB solution → ④ Clinical proof → ⑤ Ask" },
+      { label: "Narrative arc", content: "① Situation (patient need) → ② Problem (current gap) → ③ solution Danone → ④ Clinical proof → ⑤ Ask" },
       { label: "Content used", content: "iPad detailing aid, clinical study summary, patient case study, competitive comparison card" },
-      { label: "Key moment", content: 'Pharmacist or staff verbalises recommendation intent: "I\'ll recommend Lipikar to eczema patients" → log in SFA', highlight: true },
+      { label: "Key moment", content: 'Pharmacist or staff verbalises recommendation intent: "Je recommanderai Fortimel aux patients à risque de dénutrition" → log in SFA', highlight: true },
       { label: "Leave-behind", content: "Branded product card + QR to online training module + patient leaflet" },
       { label: "Follow-up", content: "NBA in SFA for next visit: verify recommendation rate change vs. baseline" },
     ],
@@ -86,7 +86,7 @@ const CARDS: CardData[] = [
     accentBg: "bg-orange-50",
     sections: [
       { label: "Goal", content: "One message, one ask — reinforce a recommendation reflex on a single priority brand or occasion", highlight: true },
-      { label: "Narrative (30 sec)", content: '"Hi [name], quick one — this week\'s hero is Anthelios SPF50+. One patient in 3 leaves without sun care. Ask them!"', highlight: true },
+      { label: "Narrative (30 sec)", content: '"Bonjour [prénom], rapide — le produit phare cette semaine est Fortimel Protein. 1 patient sur 3 repart sans CNO adapté. Pensez-y !"', highlight: true },
       { label: "Content used", content: "Physical sample or product teaser card (palm-sized), one verbal stat, no iPad needed" },
       { label: "Key moment", content: 'Staff nods and commits verbally: "Got it, I\'ll push the SPF range this week."', highlight: true },
       { label: "Leave-behind", content: "Sample + shelf-talker if available. No formal leave-behind required" },

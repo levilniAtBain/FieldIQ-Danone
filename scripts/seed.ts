@@ -26,7 +26,7 @@ async function main() {
   const [manager] = await db
     .insert(schema.users)
     .values({
-      email: "marie.dupont@loreal.com",
+      email: "marie.dupont@danone.com",
       name: "Marie Dupont",
       passwordHash,
       role: "manager",
@@ -38,7 +38,7 @@ async function main() {
     .insert(schema.users)
     .values([
       {
-        email: "thomas.martin@loreal.com",
+        email: "thomas.martin@danone.com",
         name: "Thomas Martin",
         passwordHash,
         role: "rep",
@@ -46,7 +46,7 @@ async function main() {
         managerId: manager.id,
       },
       {
-        email: "sarah.bernard@loreal.com",
+        email: "sarah.bernard@danone.com",
         name: "Sarah Bernard",
         passwordHash,
         role: "rep",
@@ -61,60 +61,60 @@ async function main() {
     .insert(schema.products)
     .values([
       {
-        sku: "VIC-001",
-        name: "Vichy Minéral 89",
-        brand: "vichy",
-        category: "serum",
-        unitPrice: "18.90",
-      },
-      {
-        sku: "CER-001",
-        name: "CeraVe Moisturising Cream",
-        brand: "cerave",
-        category: "moisturizer",
+        sku: "DAN-NUT-FORTPROT-VAN-200ML4",
+        name: "Fortimel Protein 200ml - Vanille",
+        brand: "nutricia",
+        category: "medical_nutrition",
         unitPrice: "14.50",
       },
       {
-        sku: "LRP-001",
-        name: "La Roche-Posay Anthelios SPF50+",
-        brand: "la_roche_posay",
-        category: "sunscreen",
-        unitPrice: "22.00",
+        sku: "DAN-NUT-FORTPROT-FRA-200ML4",
+        name: "Fortimel Protein 200ml - Fraise",
+        brand: "nutricia",
+        category: "medical_nutrition",
+        unitPrice: "14.50",
       },
       {
-        sku: "SCS-001",
-        name: "SkinCeuticals C E Ferulic",
-        brand: "skinceuticals",
-        category: "serum",
-        unitPrice: "166.00",
+        sku: "DAN-NUT-FORTENERGY-VAN-200ML4",
+        name: "Fortimel Energy 200ml - Vanille",
+        brand: "nutricia",
+        category: "medical_nutrition",
+        unitPrice: "13.90",
       },
       {
-        sku: "VIC-002",
-        name: "Vichy Liftactiv Collagen Specialist",
-        brand: "vichy",
-        category: "anti-aging",
-        unitPrice: "38.00",
+        sku: "DAN-GAL-CALISMA1-800G",
+        name: "Gallia Calisma 1er âge 800g",
+        brand: "gallia",
+        category: "infant_formula",
+        unitPrice: "19.90",
       },
       {
-        sku: "CER-002",
-        name: "CeraVe Hydrating Cleanser",
-        brand: "cerave",
-        category: "cleanser",
-        unitPrice: "11.00",
+        sku: "DAN-APT-PRONUTRA1-800G",
+        name: "Aptamil Pronutra 1 800g",
+        brand: "aptamil",
+        category: "infant_formula",
+        unitPrice: "18.50",
       },
       {
-        sku: "LRP-002",
-        name: "La Roche-Posay Lipikar Baume AP+",
-        brand: "la_roche_posay",
-        category: "body",
-        unitPrice: "16.50",
+        sku: "DAN-BLE-COMPOTE-4X90G",
+        name: "Blédina Compote Pomme Poire 4x90g",
+        brand: "bledina",
+        category: "baby_food",
+        unitPrice: "3.20",
       },
       {
-        sku: "MDK-001",
-        name: "Medik8 Crystal Retinal 3",
-        brand: "medik8",
-        category: "retinol",
-        unitPrice: "57.00",
+        sku: "DAN-EVI-BEBE-6X50CL",
+        name: "Evian Eau minérale bébé 6x50cl",
+        brand: "evian",
+        category: "water",
+        unitPrice: "4.90",
+      },
+      {
+        sku: "DAN-VOL-SPORT-6X50CL",
+        name: "Volvic Nature 6x50cl",
+        brand: "volvic",
+        category: "water",
+        unitPrice: "3.50",
       },
     ])
     .returning();
@@ -291,59 +291,59 @@ async function main() {
   await db.insert(schema.specialists).values([
     {
       name: "Dr. Sophie Renard",
-      email: "s.renard@loreal-medical.com",
+      email: "s.renard@danone-medical.com",
       phone: "06 12 34 56 78",
       role: "mv" as const,
       territory: "Paris 1er–8e",
-      notes: "Spécialiste CeraVe & La Roche-Posay. Disponible lundi et mercredi.",
+      notes: "Spécialiste Nutricia & Fortimel. Disponible lundi et mercredi.",
     },
     {
       name: "Dr. Antoine Lefevre",
-      email: "a.lefevre@loreal-medical.com",
+      email: "a.lefevre@danone-medical.com",
       phone: "06 23 45 67 89",
       role: "mv" as const,
       territory: "Paris 9e–20e & Banlieue Est",
-      notes: "Spécialiste Vichy & SkinCeuticals. Préfère les visites le matin.",
+      notes: "Spécialiste Gallia & Aptamil. Préfère les visites le matin.",
     },
     {
       name: "Dr. Claire Moreau",
-      email: "c.moreau@loreal-medical.com",
+      email: "c.moreau@danone-medical.com",
       phone: "06 34 56 78 90",
       role: "mv" as const,
       territory: "Hauts-de-Seine & Val-de-Marne",
-      notes: "Spécialiste Medik8 & SkinBetter. Bilingue français/anglais.",
+      notes: "Spécialiste Blédina & nutrition pédiatrique. Bilingue français/anglais.",
     },
     {
       name: "Lucas Fontaine",
-      email: "l.fontaine@loreal-merch.com",
+      email: "l.fontaine@danone-merch.com",
       phone: "06 45 67 89 01",
       role: "merchandiser" as const,
       territory: "Paris Rive Droite",
-      notes: "Expert mise en rayon & planogramme. Disponible du lundi au vendredi.",
+      notes: "Expert mise en rayon & planogramme Danone. Disponible du lundi au vendredi.",
     },
     {
       name: "Amélie Girard",
-      email: "a.girard@loreal-merch.com",
+      email: "a.girard@danone-merch.com",
       phone: "06 56 78 90 12",
       role: "merchandiser" as const,
       territory: "Paris Rive Gauche & Banlieue Sud",
-      notes: "Spécialiste animations en pharmacie. Certifiée Visual Merchandising.",
+      notes: "Spécialiste animations Danone en pharmacie. Certifiée Visual Merchandising.",
     },
     {
       name: "Karim Benali",
-      email: "k.benali@loreal-merch.com",
+      email: "k.benali@danone-merch.com",
       phone: "06 67 89 01 23",
       role: "merchandiser" as const,
       territory: "Île-de-France Nord & Est",
-      notes: "Expert implantation et audit rayon dermo-cosmétique.",
+      notes: "Expert implantation et audit rayon nutrition & petite enfance.",
     },
   ]);
 
   console.log("✅ Seed complete!");
   console.log("\n📋 Test credentials:");
-  console.log("  Manager: marie.dupont@loreal.com / password123");
-  console.log("  Rep 1:   thomas.martin@loreal.com / password123");
-  console.log("  Rep 2:   sarah.bernard@loreal.com / password123");
+  console.log("  Manager: marie.dupont@danone.com / password123");
+  console.log("  Rep 1:   thomas.martin@danone.com / password123");
+  console.log("  Rep 2:   sarah.bernard@danone.com / password123");
 
   await pool.end();
 }

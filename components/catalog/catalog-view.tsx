@@ -18,21 +18,17 @@ type Product = {
 };
 
 const BRAND_COLORS: Record<string, string> = {
-  vichy: "bg-blue-50 text-blue-700 border-blue-200",
-  cerave: "bg-green-50 text-green-700 border-green-200",
-  la_roche_posay: "bg-red-50 text-red-700 border-red-200",
-  skinceuticals: "bg-gray-100 text-gray-700 border-gray-300",
-  skinbetter: "bg-purple-50 text-purple-700 border-purple-200",
-  mixa: "bg-amber-50 text-amber-700 border-amber-200",
-  nyx: "bg-zinc-100 text-zinc-800 border-zinc-300",
-  biotherm: "bg-sky-50 text-sky-700 border-sky-200",
-  medik8: "bg-orange-50 text-orange-700 border-orange-200",
+  nutricia: "bg-blue-50 text-blue-700 border-blue-200",
+  gallia: "bg-green-50 text-green-700 border-green-200",
+  bledina: "bg-amber-50 text-amber-700 border-amber-200",
+  aptamil: "bg-red-50 text-red-700 border-red-200",
+  evian: "bg-sky-50 text-sky-700 border-sky-200",
+  volvic: "bg-emerald-50 text-emerald-700 border-emerald-200",
   other: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
 const BRANDS = [
-  "vichy", "cerave", "la_roche_posay", "skinceuticals",
-  "skinbetter", "mixa", "nyx", "biotherm", "medik8",
+  "nutricia", "gallia", "bledina", "aptamil", "evian", "volvic",
 ];
 
 function brandLabel(b: string) {

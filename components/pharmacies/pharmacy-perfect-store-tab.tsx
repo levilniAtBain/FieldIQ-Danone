@@ -7,9 +7,11 @@ import {
   ChevronDown, ChevronUp, CheckSquare2, Square, AlertTriangle, Lightbulb, PencilLine, Trash2,
 } from "lucide-react";
 import { PerfectStoreUpdatePanel } from "./perfect-store-update-panel";
+import { StoreLayoutView } from "./store-layout-view";
 import { format } from "date-fns";
 import { CHECKLIST_ITEMS, SECTION_LABELS, type ChecklistSection } from "@/lib/perfect-store/checklist";
 import { PlanogramGuideButton } from "./planogram-guide-modal";
+import type { StoreLayoutAnalysis, StoreZone } from "@/lib/ai/claude";
 
 type KpiValues = {
   shareOfShelf: number | null;
@@ -469,6 +471,14 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
+  // ── THE Perfect Store Beta state ──────────────────────────────────────────
+  const [betaAnalyzing, setBetaAnalyzing] = useState(false);
+  const [betaAnalysis, setBetaAnalysis] = useState<StoreLayoutAnalysis | null>(null);
+  const [betaError, setBetaError] = useState<string | null>(null);
+  const [betaSelectedZone, setBetaSelectedZone] = useState<string | null>(null);
+  const [betaPhotoUrl, setBetaPhotoUrl] = useState<string | null>(null);
+  const [betaPhotoExpanded, setBetaPhotoExpanded] = useState(false);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -522,6 +532,49 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
   const handleDeleteDraft = async (visitId: string) => {
     await fetch(`/api/pharmacies/${pharmacyId}/perfect-store/${visitId}`, { method: "DELETE" });
     fetchData();
+  };
+
+  const handleBetaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBetaAnalysis(null);
+    setBetaError(null);
+    setBetaSelectedZone(null);
+    setBetaPhotoExpanded(false);
+    setBetaAnalyzing(true);
+    // Capture object URL for comparison thumbnail
+    const objectUrl = URL.createObjectURL(file);
+    setBetaPhotoUrl(objectUrl);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+    try {
+      // Resize to max 1024px on longest dimension at 0.85 JPEG quality
+      const resized = await new Promise<{ base64: string; mimeType: "image/jpeg" }>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 1024;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const base64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
+          resolve({ base64, mimeType: "image/jpeg" });
+        };
+        img.src = URL.createObjectURL(file);
+      });
+      const res = await fetch(`/api/pharmacies/${pharmacyId}/store-layout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: resized.base64, mimeType: resized.mimeType }),
+      });
+      if (!res.ok) throw new Error("Analysis failed");
+      setBetaAnalysis(await res.json());
+    } catch {
+      setBetaError("Could not analyze the photo. Please try again with a clear interior view.");
+    } finally {
+      setBetaAnalyzing(false);
+    }
   };
 
   if (loading) {
@@ -636,6 +689,163 @@ export function PharmacyPerfectStoreTab({ pharmacyId, session }: Props) {
               onDelete={() => handleDeleteDraft(visit.id)}
             />
           ))}
+        </div>
+      )}
+
+      {/* ─── THE Perfect Store Beta ──────────────────────────────────── */}
+      <div className="rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/40 overflow-hidden">
+        {/* Header */}
+        <div className="px-4 pt-4 pb-3 flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold tracking-widest text-violet-500 uppercase bg-violet-100 px-1.5 py-0.5 rounded">
+                Beta
+              </span>
+              <h4 className="text-sm font-semibold text-gray-800">THE Perfect Store</h4>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Upload a general pharmacy photo — AI generates an isometric floor plan showing where L&apos;Oréal should be placed per PICOS.
+            </p>
+          </div>
+        </div>
+
+        {/* Upload zone */}
+        {!betaAnalyzing && !betaAnalysis && (
+          <label className="mx-4 mb-4 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-violet-200 rounded-xl p-6 cursor-pointer hover:bg-violet-50 transition-colors bg-white/60">
+            <Camera className="w-7 h-7 text-violet-400" />
+            <span className="text-sm font-medium text-violet-600">Upload pharmacy interior photo</span>
+            <span className="text-xs text-gray-400">JPEG, PNG or WebP · resized automatically</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleBetaUpload}
+            />
+          </label>
+        )}
+
+        {/* Analyzing */}
+        {betaAnalyzing && (
+          <div className="flex flex-col items-center justify-center py-10 gap-3 mx-4 mb-4 rounded-xl bg-white/60 border border-violet-100">
+            <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+            <p className="text-xs font-medium text-violet-600">Mapping store layout…</p>
+            <p className="text-xs text-gray-400">Claude is identifying zones and PICOS compliance</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {betaError && !betaAnalyzing && (
+          <div className="mx-4 mb-3 flex items-center gap-2 bg-red-50 rounded-lg px-3 py-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <p className="text-xs text-red-700 flex-1">{betaError}</p>
+            <label className="text-xs font-medium text-red-600 underline cursor-pointer">
+              Try again
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleBetaUpload} />
+            </label>
+          </div>
+        )}
+
+        {/* Analysis result */}
+        {betaAnalysis && !betaAnalyzing && (
+          <div className="px-4 pb-4 space-y-4">
+            {/* Summary + photo thumbnail */}
+            <div className="flex items-start gap-3">
+              <p className="text-xs text-gray-600 leading-relaxed flex-1">{betaAnalysis.storeSummary}</p>
+              {betaPhotoUrl && (
+                <button
+                  onClick={() => setBetaPhotoExpanded(true)}
+                  className="flex-shrink-0 rounded-lg overflow-hidden border border-violet-200 hover:border-violet-400 transition-colors"
+                  title="View reference photo"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={betaPhotoUrl} alt="Reference photo" className="w-20 h-16 object-cover" />
+                  <p className="text-[9px] text-center text-violet-500 font-medium py-0.5 bg-violet-50">
+                    Reference
+                  </p>
+                </button>
+              )}
+            </div>
+
+            {/* Isometric floor plan */}
+            <StoreLayoutView
+              analysis={betaAnalysis}
+              selectedZoneId={betaSelectedZone}
+              onZoneSelect={setBetaSelectedZone}
+            />
+
+            {/* Key Actions — clickable to highlight zone */}
+            {betaAnalysis.keyActions.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 text-violet-500" />
+                  Key PICOS Actions
+                  <span className="text-[9px] font-normal text-gray-400 normal-case ml-1">tap to highlight zone</span>
+                </p>
+                <div className="space-y-1.5">
+                  {betaAnalysis.keyActions.map((action, i) => {
+                    const isHighlighted = action.zoneId && betaSelectedZone === action.zoneId;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          if (action.zoneId) {
+                            setBetaSelectedZone(isHighlighted ? null : action.zoneId);
+                          }
+                        }}
+                        className={cn(
+                          "flex items-start gap-2 w-full text-left rounded-lg px-2.5 py-2 border transition-colors",
+                          action.zoneId ? "cursor-pointer hover:bg-violet-50" : "cursor-default",
+                          isHighlighted ? "bg-violet-100 border-violet-400" : "bg-white border-violet-100"
+                        )}
+                      >
+                        <span className={cn(
+                          "text-[10px] font-bold mt-0.5 w-3 flex-shrink-0",
+                          isHighlighted ? "text-violet-600" : "text-violet-400"
+                        )}>{i + 1}</span>
+                        <p className="text-xs text-gray-700 leading-snug">{action.text}</p>
+                        {action.zoneId && (
+                          <span className="text-[9px] text-violet-300 flex-shrink-0 mt-0.5">↗</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Re-analyze */}
+            <label className="flex items-center justify-center gap-1.5 w-full text-xs font-medium text-violet-500 hover:text-violet-700 py-1.5 cursor-pointer transition-colors">
+              <Camera className="w-3.5 h-3.5" />
+              Upload a different photo
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleBetaUpload}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* Photo lightbox */}
+      {betaPhotoExpanded && betaPhotoUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setBetaPhotoExpanded(false)}
+        >
+          <div className="relative max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setBetaPhotoExpanded(false)}
+              className="absolute -top-8 right-0 text-white/70 hover:text-white text-xs font-medium"
+            >
+              Close ✕
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={betaPhotoUrl} alt="Reference pharmacy photo" className="w-full rounded-xl shadow-2xl" />
+            <p className="text-center text-white/60 text-xs mt-2">Reference photo used for floor plan analysis</p>
+          </div>
         </div>
       )}
 
