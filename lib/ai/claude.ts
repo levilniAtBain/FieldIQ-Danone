@@ -449,6 +449,10 @@ export type OrderLineItem = {
 
 export interface OrderBuilderContext {
   pharmacyName: string;
+  accountType?: string;
+  doctorNotes?: string | null;
+  mainSpecialty?: string | null;
+  secondarySpecialty?: string | null;
   shelfAnalyses: ShelfAnalysisResult[];
   lastOrderLines: Array<{ sku: string; name: string; quantity: number; brand: string }>;
   scannedOrderItems: Array<{ productName: string; sku: string | null; quantity: number }>;
@@ -472,31 +476,55 @@ export type AiOrderResult = {
 
 export async function buildOrderWithAI(context: OrderBuilderContext): Promise<AiOrderResult> {
   const skuList = context.availableProducts.map((p) => `${p.sku} — ${p.name} (${p.brand})`).join("\n");
+  const isHospital = context.accountType === "hospital";
 
   const shelfContext = context.shelfAnalyses.length > 0
     ? context.shelfAnalyses.map((a, i) => {
-        const parts = [`Shelf photo ${i + 1} (score ${a.overallScore}/10): ${a.summary}`];
+        const parts = [isHospital
+          ? `Stock photo ${i + 1}: ${a.summary}`
+          : `Shelf photo ${i + 1} (score ${a.overallScore}/10): ${a.summary}`];
         if (a.stockouts.length) parts.push(`  Stockouts: ${a.stockouts.join(", ")}`);
         if (a.lowStock.length) parts.push(`  Low stock: ${a.lowStock.join(", ")}`);
-        if (a.recommendations.length) parts.push(`  AI recommendations: ${a.recommendations.join("; ")}`);
+        if (!isHospital && a.recommendations.length) parts.push(`  AI recommendations: ${a.recommendations.join("; ")}`);
         return parts.join("\n");
       }).join("\n\n")
-    : "  No shelf photos taken";
+    : isHospital ? "  No stock photos taken" : "  No shelf photos taken";
 
-  const prompt = `You are a field sales assistant for Danone. Build a pharmacy replenishment order for ${context.pharmacyName}.
+  const hospitalSection = isHospital ? `
+HOSPITAL / PUI ACCOUNT — CLINICAL ORDERING CONTEXT
+Account: ${context.pharmacyName}
+Main specialty: ${context.mainSpecialty ?? "not specified"}
+Secondary specialty: ${context.secondarySpecialty ?? "none"}
 
+Doctor/service clinical notes (KEY — read carefully to understand formulary status and opportunities):
+${context.doctorNotes ?? "No notes available"}
+
+Interpretation guide for the clinical notes:
+- Phrases like "en formulaire", "référencé", "en protocole" → product already ordered; use previous order as baseline and replenish
+- Phrases like "intérêt", "à qualifier", "à développer", "ouvert à" → product not yet ordered; flag as an introduction opportunity (source: "peer")
+- Phrases like "prescrit systématiquement", "très fort volume", "référent" → high-volume product; prioritise generous quantities
+- Product names mentioned in notes but absent from previous orders → likely introduction target; propose a small trial quantity
+
+For hospital accounts, ignore shelf replenishment logic. Orders reflect the PUI's clinical stock needs, not retail sell-out.
+` : "";
+
+  const prompt = `You are a field sales assistant for Danone. Build a ${isHospital ? "hospital PUI clinical stock" : "pharmacy replenishment"} order for ${context.pharmacyName}.
+${hospitalSection}
 Available products (SKU — Name — Brand):
 ${skuList}
 
-Last order from this pharmacy:
+Last order from this account:
 ${context.lastOrderLines.length > 0
   ? context.lastOrderLines.map((l) => `  ${l.sku} ${l.name}: ${l.quantity} units`).join("\n")
   : "  No previous order on record"}
 
-Shelf analysis from this visit (use to replenish stockouts and low stock):
+${isHospital ? `Stock photos from this visit (PUI storage room — use to detect stockouts and low stock):
 ${shelfContext}
 
-Scanned/typed notes from this visit (may reference products or quantities):
+` : `Shelf analysis from this visit:
+${shelfContext}
+
+`}Scanned/typed notes from this visit (may reference products or quantities):
 ${context.scannedOrderItems.length > 0
   ? context.scannedOrderItems.map((i) => `  ${i.sku ?? "?"} ${i.productName}: ${i.quantity}`).join("\n")
   : "  None"}
@@ -504,39 +532,51 @@ ${context.scannedOrderItems.length > 0
 Voice notes from this visit:
 ${context.voiceTranscript ?? "None"}
 
-Sell-out data (what this pharmacy sold since last visit):
-${context.sellOutData && context.sellOutData.length > 0
-  ? context.sellOutData.map((s) => `  ${s.sku} ${s.name}: ${s.qtySold} unités vendues${s.periodLabel ? ` (${s.periodLabel})` : ""}`).join("\n")
-  : "  Non disponible"}
-
-Stock actuel (inventaire en pharmacie):
+${isHospital ? `Current PUI stock (from inventory scan):
 ${context.stockData && context.stockData.length > 0
-  ? context.stockData.map((s) => `  ${s.sku} ${s.name}: ${s.qtyInStock} unités en stock`).join("\n")
-  : "  Non disponible"}
+  ? context.stockData.map((s) => `  ${s.sku} ${s.name}: ${s.qtyInStock} units`).join("\n")
+  : "  Not available"}
 
-Products frequently ordered by nearby pharmacies (peer data):
+` : `Sell-out data (what this account sold since last visit):
+${context.sellOutData && context.sellOutData.length > 0
+  ? context.sellOutData.map((s) => `  ${s.sku} ${s.name}: ${s.qtySold} units sold${s.periodLabel ? ` (${s.periodLabel})` : ""}`).join("\n")
+  : "  Not available"}
+
+Current stock:
+${context.stockData && context.stockData.length > 0
+  ? context.stockData.map((s) => `  ${s.sku} ${s.name}: ${s.qtyInStock} units`).join("\n")
+  : "  Not available"}
+
+`}Products frequently ordered by peer accounts with same specialty:
 ${context.peerSuggestions.length > 0
   ? context.peerSuggestions.map((p) => `  ${p.sku} ${p.name}: avg ${p.peerAvgQty} units`).join("\n")
   : "  No peer data"}
 
 Instructions:
-1. Start from the previous order as the baseline
-2. Prioritize replenishing any stockouts or low-stock products identified in shelf photos
-3. If sell-out data is available, use it as the primary signal for replenishment quantities:
-   - High sell-out + low/zero stock → urgent replenishment, quantity ≥ sell-out volume
-   - High sell-out + adequate stock → small top-up only
-   - Low/zero sell-out + high stock → skip or reduce significantly
-   - Product in sell-out but absent from stock → likely stockout, high priority
-4. Apply any adjustments mentioned in scanned notes or voice (e.g. "add 2 more Fortimel", "skip Gallia this time")
-5. Consider peer suggestions for products not covered by sell-out or history
+${isHospital ? `1. Read the clinical notes carefully — they are the primary signal for what to order and in what quantities
+2. Products already "en formulaire" or "en protocole": use previous order as baseline; adjust upward if notes indicate high volume ("très fort volume", "référent", "120 patients")
+3. Products flagged as "intérêt" or "à qualifier" in the notes but absent from previous orders: add a small trial quantity (2-4 units), source "peer"
+4. Only include products relevant to this doctor's specialty (${context.mainSpecialty ?? "general"} / ${context.secondarySpecialty ?? "none"}) — exclude unrelated lines
+5. If stock photos are available, treat stockouts and low-stock items as urgent replenishment needs (override baseline quantity upward)
+6. If current PUI stock is available, use it to avoid over-ordering: skip or reduce products already well-stocked unless notes indicate high consumption
+7. Apply any adjustments from scanned or voice notes
+8. Only include SKUs from the available products list
+9. Provide a rationale for each line referencing clinical notes, stock photo, or inventory data` : `1. Start from the previous order as the baseline
+2. Prioritize replenishing stockouts and low-stock items from shelf photos
+3. Use sell-out data as the primary quantity signal:
+   - High sell-out + low stock → urgent replenishment, quantity ≥ sell-out volume
+   - High sell-out + adequate stock → small top-up
+   - Low sell-out + high stock → skip or reduce
+4. Apply adjustments from scanned or voice notes
+5. Consider peer suggestions for uncovered products
 6. Only include SKUs from the available products list
-7. Provide a brief rationale for each line, noting when driven by sell-out/stock data
+7. Provide a brief rationale for each line`}
 
 Return JSON only — no markdown:
 {
   "lines": [
-    { "sku": "DAN-NUT-FORTPROT-VAN-200ML4", "quantity": 6, "rationale": "same as last order", "source": "history" },
-    { "sku": "DAN-GAL-CALISMA1-800G", "quantity": 3, "rationale": "added per voice note request", "source": "voice" }
+    { "sku": "DAN-NUT-FORTPROT-VAN-200ML4", "quantity": 6, "rationale": "en formulaire service réanimation, volume élevé", "source": "history" },
+    { "sku": "DAN-NUT-KETOCAL41-300G", "quantity": 2, "rationale": "intérêt exprimé dans les notes pour neurologie pédiatrique — introduction trial", "source": "peer" }
   ],
   "summary": "One sentence describing the order",
   "warnings": ["any items from notes that couldn't be matched to a SKU"]
@@ -766,49 +806,95 @@ export interface NextBestActionsContext {
   visitCount: number;
   previouslyAcceptedActions: string[];
   specialistVisitNeeded: boolean;
+  // Hospital-specific
+  accountType: string;
+  doctorNotes: string | null;
+  mainSpecialty: string | null;
+  secondarySpecialty: string | null;
+  peerOrders: { accountName: string; products: string[] }[];
 }
 
 export async function generateNextBestActions(
   context: NextBestActionsContext
 ): Promise<NextBestAction[]> {
-  const prompt = `You are a field sales intelligence assistant for Danone. Generate 3-5 next best actions for a pharmacy sales rep.
+  const isHospital = context.accountType === "hospital";
+
+  const hospitalSection = isHospital ? `
+Hospital/Doctor context:
+- Account type: Hospital (PUI / medical prescriber)
+- Doctor name & specialty: ${context.pharmacyName}
+- Doctor clinical notes: ${context.doctorNotes ?? "none"}
+- Main specialty: ${context.mainSpecialty ?? "not set"}
+- Secondary specialty: ${context.secondarySpecialty ?? "not set"}
+${context.peerOrders.length > 0 ? `- Peer hospitals with same specialty and their typical orders:\n${context.peerOrders.map(p => `    • ${p.accountName}: ${p.products.join(", ")}`).join("\n")}` : ""}
+
+Key Danone Nutricia products by specialty (use these to suggest concrete products):
+- enteral_nutrition: Nutrison Energy, Nutrison Protein Intense, Nutrison Multi Fibre, Nutrison Peptisorb, PreOp
+- medical_nutrition: Fortimel Compact Protein, Fortimel Protein Sensation, Fortimel Crème 2kcal, Cubitan, Fortimel DiaCare
+- oncology: Fortimel Compact Protein, Fortimel Protein Sensation, Fortimel PlantBased, PreOp (RAAC)
+- geriatrics: Fortimel Crème 2kcal, Fortimel Protein, Nutilis Complete, Nutilis Aqua
+- dysphagia: Nutilis Complete, Nutilis Aqua, Nutilis Powder, Nutilis Fruit
+- nephrology: Renilon 7.5, Renilon 4.0, Nepro HP
+- metabolic_diseases: PKU Anamix, MSUD Anamix, HCU Anamix, KetoCal 4:1, KetoCal 3:1, GMPro, Loprofin, Galactomin 19
+- pediatrics: Infatrini, Nutrini, Nutrini Energy, Pepticate, Neocate LCP, KetoCal LQ Multi Fibre
+- infant_formula: Aptamil Profutura, Gallia Calisma, Gallia Pepticate, Neocate LCP, Infatrini
+- home_care: Nutrison (full range), Fortimel (full range), Nutilis (full range)
+
+Hospital-specific action guidance:
+- Focus on clinical adoption, formulary inclusion, and prescribing habits — NOT shelf display
+- "specialist_visit" = schedule a Danone médecin conseil or diététicien expert to present clinical data
+- "product_intro" = introduce a specific product relevant to this doctor's specialty with clinical evidence
+- "training" = clinical training session or lunch-and-learn on Danone Nutricia products for the medical team
+- "animation" = departmental awareness event, poster, or scientific symposium invitation
+- "bundle" = combined prescription protocol (e.g. PreOp + post-op Nutrison for surgical pathways)
+- "promo" is NOT relevant for hospital/PUI accounts — do not suggest it
+` : "";
+
+  const prompt = `You are a field sales intelligence assistant for Danone. Generate 3-5 next best actions for a ${isHospital ? "hospital medical sales rep visiting a prescribing doctor" : "pharmacy sales rep"}.
 
 Account context:
-- Pharmacy: ${context.pharmacyName}, ${context.city}
+- Account: ${context.pharmacyName}, ${context.city}
+- Account type: ${isHospital ? "Hospital / Medical prescriber" : "Retail pharmacy"}
 - Tier: ${context.tier}
 - Segment: ${context.segment ?? "general"}
 - Date: ${context.currentDate} (${context.season} season)
 - Last visit: ${context.lastVisitDate ?? "never"}${context.daysSinceLastVisit !== null ? ` (${context.daysSinceLastVisit} days ago)` : ""}
 - Last visit notes: ${context.lastVisitNotes ?? "none"}
-- Shelf score: ${context.shelfScore !== null ? `${context.shelfScore}/10` : "not assessed"}
-- Shelf summary: ${context.shelfSummary ?? "not available"}
+${!isHospital ? `- Shelf score: ${context.shelfScore !== null ? `${context.shelfScore}/10` : "not assessed"}
+- Shelf summary: ${context.shelfSummary ?? "not available"}` : ""}
 - Total visits: ${context.visitCount}
 - Previously accepted actions (do not repeat): ${context.previouslyAcceptedActions.join("; ") || "none"}
-${context.specialistVisitNeeded ? "- IMPORTANT: A specialist visit is strongly recommended (shelf score below 6 or >60 days since last visit or never visited)" : ""}
-
+${context.specialistVisitNeeded ? "- IMPORTANT: A specialist/expert visit is strongly recommended" : ""}
+${hospitalSection}
 Available action types:
-- "promo": Promotional offer to present (seasonal campaigns, volume discounts)
-- "bundle": Bundle deal proposal (multi-product packaging)
-- "animation": In-store animation or display event
-- "specialist_visit": Schedule a visit from a Danone product specialist (diététicien, conseiller médical) to support the pharmacy team with product expertise and shelf assessment
-- "product_intro": Introduce a new Danone product range (Nutricia Fortimel, Gallia, Aptamil, Blédina, Evian, Volvic)
-- "training": Training session for pharmacy staff on product knowledge (medical nutrition, infant formula, etc.)
+- "specialist_visit": Schedule a visit from a Danone expert (médecin conseil, diététicien clinique)
+- "product_intro": Introduce a specific Danone product with clinical or commercial evidence
+- "training": Clinical training / lunch-and-learn for the medical or pharmacy team
+- "animation": Departmental event, scientific symposium, or awareness campaign
+- "bundle": Multi-product prescription protocol or combined ordering pathway
+${!isHospital ? `- "promo": Promotional offer (seasonal campaigns, volume discounts)` : ""}
 
 Instructions:
-1. Prioritise actions relevant to the ${context.season} season (spring = baby formula stock-up, Evian/Volvic refresh; summer = hydration, Evian promotion; autumn = medical nutrition review, back-to-school; winter = immune support, Fortimel range)
-2. Segment A & B accounts should receive higher-value, more strategic actions; Seg C focuses on development; Seg D digital-only
-3. If shelf score is below 6 or not assessed, prioritise a specialist_visit action
+${isHospital ? `1. Ground every action in the doctor's specialty (${context.mainSpecialty ?? "general"}) and their clinical notes
+2. Reference specific Danone Nutricia products suited to this doctor's patient population
+3. If peer hospitals with same specialty order products this doctor hasn't tried, suggest introducing those
+4. Tier A & B doctors = strategic relationship actions (KOL events, symposia, clinical studies); Tier C = development
+5. Never suggest promo or shelf-display actions for hospital accounts
+6. If dueAt is relevant, suggest a date within the next 30-60 days in ISO format (YYYY-MM-DD), otherwise null
+${context.specialistVisitNeeded ? "7. MUST include at least one specialist_visit action" : ""}` : `1. Prioritise actions relevant to the ${context.season} season (spring = baby formula, Evian/Volvic; summer = hydration; autumn = medical nutrition; winter = immune support)
+2. Segment A & B = strategic actions; Seg C = development; Seg D = digital-only
+3. If shelf score is below 6 or not assessed, prioritise a specialist_visit
 4. Suggest concrete, named Danone products where relevant
 5. If dueAt is relevant, suggest a date within the next 30-60 days in ISO format (YYYY-MM-DD), otherwise null
-${context.specialistVisitNeeded ? "6. MUST include at least one specialist_visit action" : ""}
+${context.specialistVisitNeeded ? "6. MUST include at least one specialist_visit action" : ""}`}
 
 Return a JSON array only — no markdown, no explanation:
 [
   {
-    "type": "promo",
-    "title": "Lancement Fortimel Protein — offre de lancement",
-    "description": "Présenter la gamme Fortimel Protein avant la saison hivernale. Remise de 15% sur la première commande de 12 unités ou plus.",
-    "dueAt": "2026-04-30"
+    "type": "product_intro",
+    "title": "Présentation Nutrison Peptisorb — protocole MICI",
+    "description": "Proposer Nutrison Peptisorb pour les patients MICI en poussée. Apporter données cliniques et étude comparative vs concurrents. Objectif : inclusion au formulaire du service.",
+    "dueAt": "2026-05-15"
   }
 ]`;
 

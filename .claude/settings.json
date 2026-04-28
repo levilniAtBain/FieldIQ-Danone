@@ -45,7 +45,8 @@
       "Bash(sed -i '' -e 's|// GET /api/orders/\\\\[id\\\\]/export — download order as CSV for L'\\\\''Oréal import|// GET /api/orders/[id]/export — download order as CSV for Danone import|g' '/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/orders/[id]/export/route.ts')",
       "Bash(sed -i '' 's/{ label: \"LDB brands\"/{ label: \"Marques Danone\"/g' /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/components/shared/segment-badge.tsx)",
       "Bash(sed -i '' -e 's/const lorealX/const danoneX/g' -e 's/lorealX\\\\.map/danoneX.map/g' -e 's|{/\\\\* ── TN display \\(end-cap, all L'\\\\''Oréal\\) ── \\\\*/}|{/* ── TN display \\(end-cap, all Danone\\) ── */}|g' /Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/components/pharmacies/planogram-svg.tsx)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3020/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3020/)",
+      "Bash(DATABASE_URL=postgresql://fieldiq:fieldiq@localhost:5445/fieldiq npx drizzle-kit migrate)"
     ],
     "additionalDirectories": [
       "/Users/78748/Library/CloudStorage/OneDrive-Bain/BDocuments/Code/LDB_FieldIQ_Alpha/app/api/files",

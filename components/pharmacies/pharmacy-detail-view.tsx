@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Session } from "@/lib/auth/session";
-import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink, Sparkles, CheckCircle, X, AlertTriangle, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Zap, Truck, Package, CalendarRange, ChevronRight, Stethoscope } from "lucide-react";
+import { MapPin, Phone, ArrowLeft, Plus, Calendar, ExternalLink, Sparkles, CheckCircle, X, AlertTriangle, Loader2, RefreshCw, ChevronDown, ChevronUp, ShoppingCart, Zap, Truck, Package, CalendarRange, ChevronRight, Stethoscope, Building2, Cross, LayoutGrid } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SpecialistCoordPanel, SPECIALIST_STATUS_LABEL, type Specialist, type ActionForCoord } from "@/components/shared/specialist-coord-panel";
 import { VISIT_TYPE_OPTIONS } from "@/lib/visit-types";
@@ -33,6 +33,7 @@ type Pharmacy = {
   city: string;
   postalCode: string;
   tier: string;
+  accountType: string;
   pharmacistName: string | null;
   pharmacistPhone: string | null;
   segment: string | null;
@@ -40,8 +41,25 @@ type Pharmacy = {
   segmentPotential: string | null;
   segmentProfile: string[] | null;
   segmentShopper: string[] | null;
+  mainSpecialty: string | null;
+  secondarySpecialty: string | null;
   rep: { name: string; email: string };
   visits: Visit[];
+};
+
+const SPECIALTY_LABELS: Record<string, string> = {
+  medical_nutrition: "Medical nutrition",
+  enteral_nutrition: "Enteral nutrition",
+  infant_formula: "Infant formula",
+  dysphagia: "Dysphagia",
+  metabolic_diseases: "Metabolic diseases",
+  pediatrics: "Pediatrics",
+  oncology: "Oncology",
+  geriatrics: "Geriatrics",
+  nephrology: "Nephrology",
+  water_hydration: "Water & hydration",
+  home_care: "HAD / Home care",
+  mixed: "Mixed / General",
 };
 
 type Tab = "overview" | "perfect-store" | "visits" | "orders" | "actions" | "analytics" | "master-plan";
@@ -66,6 +84,7 @@ export function PharmacyDetailView({
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as Tab | null) ?? "overview";
   const [tab, setTab] = useState<Tab>(initialTab);
+  const [segOpen, setSegOpen] = useState(false);
 
   const tabs: Tab[] = session.role === "rep"
     ? ["overview", "perfect-store", "visits", "orders", "actions", "analytics", "master-plan"]
@@ -78,6 +97,7 @@ export function PharmacyDetailView({
         href="/pharmacies"
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
       >
+
         <ArrowLeft size={15} /> Back to pharmacies
       </Link>
 
@@ -87,9 +107,25 @@ export function PharmacyDetailView({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <SegmentBadge tier={pharmacy.tier} />
-              {pharmacy.segment && (
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                  {pharmacy.segment}
+              {pharmacy.accountType === "hospital" ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                  <Cross size={10} />
+                  Hospital
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
+                  <Building2 size={10} />
+                  Pharmacy
+                </span>
+              )}
+              {pharmacy.mainSpecialty && (
+                <span className="inline-flex items-center text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  {SPECIALTY_LABELS[pharmacy.mainSpecialty] ?? pharmacy.mainSpecialty}
+                </span>
+              )}
+              {pharmacy.secondarySpecialty && (
+                <span className="inline-flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full opacity-75">
+                  {SPECIALTY_LABELS[pharmacy.secondarySpecialty] ?? pharmacy.secondarySpecialty}
                 </span>
               )}
             </div>
@@ -126,13 +162,31 @@ export function PharmacyDetailView({
         </div>
       </div>
 
-      {/* Segmentation */}
-      <PharmacySegmentation
-        pharmacyId={pharmacy.id}
-        initialPotential={pharmacy.segmentPotential}
-        initialProfile={pharmacy.segmentProfile}
-        initialShopper={pharmacy.segmentShopper}
-      />
+      {/* Segmentation — collapsible */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <button
+          onClick={() => setSegOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <span className="flex items-center gap-2 text-gray-600">
+            <LayoutGrid size={14} />
+            Segmentation
+          </span>
+          {segOpen ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+        </button>
+        {segOpen && (
+          <div className="border-t border-gray-50 p-4">
+            <PharmacySegmentation
+              pharmacyId={pharmacy.id}
+              initialPotential={pharmacy.segmentPotential}
+              initialProfile={pharmacy.segmentProfile}
+              initialShopper={pharmacy.segmentShopper}
+              initialMainSpecialty={pharmacy.mainSpecialty}
+              initialSecondarySpecialty={pharmacy.secondarySpecialty}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl overflow-x-auto">

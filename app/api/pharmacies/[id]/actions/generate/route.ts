@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { canAccessPharmacy, getPharmacyById } from "@/lib/db/queries/pharmacies";
 import { db } from "@/lib/db";
-import { actions } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { actions, pharmacies, orders, orderLines, products } from "@/lib/db/schema";
+import { eq, and, inArray, ne } from "drizzle-orm";
 import { differenceInDays, format, addDays } from "date-fns";
 import {
   generateNextBestActions,
@@ -56,6 +56,40 @@ export async function POST(
     columns: { title: true },
   });
 
+  // For hospitals: fetch peer accounts with same specialty and their ordered products
+  let peerOrders: { accountName: string; products: string[] }[] = [];
+  if (pharmacy.accountType === "hospital" && pharmacy.mainSpecialty) {
+    const peers = await db.query.pharmacies.findMany({
+      where: and(
+        eq(pharmacies.mainSpecialty, pharmacy.mainSpecialty),
+        eq(pharmacies.accountType, "hospital"),
+        ne(pharmacies.id, id)
+      ),
+      columns: { id: true, name: true },
+      limit: 5,
+    });
+
+    if (peers.length > 0) {
+      const peerIds = peers.map((p) => p.id);
+      const peerOrderRows = await db
+        .select({ pharmacyId: orders.pharmacyId, productName: products.name })
+        .from(orders)
+        .innerJoin(orderLines, eq(orderLines.orderId, orders.id))
+        .innerJoin(products, eq(products.id, orderLines.productId))
+        .where(inArray(orders.pharmacyId, peerIds));
+
+      const byPharmacy = new Map<string, Set<string>>();
+      for (const row of peerOrderRows) {
+        if (!byPharmacy.has(row.pharmacyId)) byPharmacy.set(row.pharmacyId, new Set());
+        byPharmacy.get(row.pharmacyId)!.add(row.productName);
+      }
+
+      peerOrders = peers
+        .filter((p) => byPharmacy.has(p.id))
+        .map((p) => ({ accountName: p.name, products: Array.from(byPharmacy.get(p.id)!) }));
+    }
+  }
+
   const now = new Date();
   const context: NextBestActionsContext = {
     pharmacyName: pharmacy.name,
@@ -74,6 +108,11 @@ export async function POST(
     visitCount: pharmacy.visits?.length ?? 0,
     previouslyAcceptedActions: acceptedActions.map((a) => a.title),
     specialistVisitNeeded,
+    accountType: pharmacy.accountType ?? "pharmacy",
+    doctorNotes: pharmacy.notes ?? null,
+    mainSpecialty: pharmacy.mainSpecialty ?? null,
+    secondarySpecialty: pharmacy.secondarySpecialty ?? null,
+    peerOrders,
   };
 
   let generated = await generateNextBestActions(context);

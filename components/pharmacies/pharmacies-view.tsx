@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Map, List, Search, Info, X } from "lucide-react";
+import { Map, List, Search, Info, X, Building2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { PharmacyList } from "./pharmacy-list";
+import { PharmacyList, PharmacyCrossIcon } from "./pharmacy-list";
 import { PharmacyMap } from "./pharmacy-map";
 import type { PharmacyWithMeta } from "@/lib/db/queries/pharmacies";
 
@@ -77,6 +77,7 @@ export function PharmaciesView({
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [showLegend, setShowLegend] = useState(false);
 
   const filtered = useMemo(() => {
@@ -91,18 +92,18 @@ export function PharmaciesView({
             return false;
         }
         if (tierFilter.length > 0 && !tierFilter.includes(p.tier)) return false;
-        if (statusFilter.length > 0 && !statusFilter.includes(p.visitStatus))
-          return false;
+        if (statusFilter.length > 0 && !statusFilter.includes(p.visitStatus)) return false;
+        if (typeFilter.length > 0 && !typeFilter.includes(p.accountType)) return false;
         return true;
       });
-  }, [pharmacies, search, tierFilter, statusFilter]);
+  }, [pharmacies, search, tierFilter, statusFilter, typeFilter]);
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Pharmacies</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Accounts</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {pharmacies.length} account{pharmacies.length !== 1 ? "s" : ""}
             {filterRepName && (
@@ -233,9 +234,39 @@ export function PharmaciesView({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search pharmacies…"
+            placeholder="Search accounts…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           />
+        </div>
+
+        {/* Account type filter */}
+        <div className="flex gap-1.5">
+          {([
+            { value: "pharmacy", label: "Pharmacy" },
+            { value: "hospital", label: "Hospital" },
+          ] as const).map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() =>
+                setTypeFilter((prev) =>
+                  prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
+                )
+              }
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-all",
+                typeFilter.includes(value)
+                  ? "bg-brand-50 border-brand-300 text-brand-700"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+              )}
+            >
+              {value === "pharmacy" ? (
+                <span className="w-2.5 h-2.5 flex-shrink-0 inline-flex items-center justify-center"><PharmacyCrossIcon /></span>
+              ) : (
+                <span className="w-3.5 h-3.5 flex-shrink-0 rounded-sm bg-blue-600 flex items-center justify-center text-white font-bold" style={{ fontSize: 8 }}>H</span>
+              )}
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Tier filter chips */}

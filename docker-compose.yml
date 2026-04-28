@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       target: production
     ports:
-      - "3020:3020"   # Direct access on same machine: http://localhost:3020
+      - "3022:3020"   # Direct access on same machine: http://localhost:3022
     volumes:
       - uploads:/app/uploads
     environment:
@@ -28,7 +28,7 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5444:5432"
+      - "5445:5432"
     environment:
       POSTGRES_USER: fieldiq
       POSTGRES_PASSWORD: fieldiq
@@ -49,8 +49,8 @@ services:
   caddy:
     image: caddy:2-alpine
     ports:
-      - "8080:80"     # HTTP (redirects to HTTPS)
-      - "8443:443"    # HTTPS — access from tablet: https://<LAN-IP>:8443
+      - "8082:80"     # HTTP (redirects to HTTPS)
+      - "8444:443"    # HTTPS — access from tablet: https://<LAN-IP>:8444
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

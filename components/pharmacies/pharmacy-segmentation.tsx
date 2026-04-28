@@ -38,6 +38,21 @@ const SHOPPER_ROWS = [
   ],
 ];
 
+const SPECIALTY_OPTIONS = [
+  { value: "medical_nutrition",   label: "Medical nutrition" },
+  { value: "enteral_nutrition",   label: "Enteral nutrition" },
+  { value: "infant_formula",      label: "Infant formula" },
+  { value: "dysphagia",           label: "Dysphagia" },
+  { value: "metabolic_diseases",  label: "Metabolic diseases" },
+  { value: "pediatrics",          label: "Pediatrics" },
+  { value: "oncology",            label: "Oncology" },
+  { value: "geriatrics",          label: "Geriatrics" },
+  { value: "nephrology",          label: "Nephrology" },
+  { value: "water_hydration",     label: "Water & hydration" },
+  { value: "home_care",           label: "HAD / Home care" },
+  { value: "mixed",               label: "Mixed / General" },
+];
+
 // ── Colour tokens ─────────────────────────────────────────────────────────────
 
 const TEAL = {
@@ -64,6 +79,14 @@ const AMBER = {
   inactive:    "border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-600",
 };
 
+const GREEN = {
+  border:      "border-t-emerald-600",
+  header:      "text-emerald-800",
+  num:         "border-emerald-500 text-emerald-700",
+  active:      "border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold",
+  inactive:    "border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600",
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function PharmacySegmentation({
@@ -71,15 +94,21 @@ export function PharmacySegmentation({
   initialPotential,
   initialProfile,
   initialShopper,
+  initialMainSpecialty,
+  initialSecondarySpecialty,
 }: {
   pharmacyId: string;
   initialPotential: string | null;
   initialProfile: string[] | null;
   initialShopper: string[] | null;
+  initialMainSpecialty: string | null;
+  initialSecondarySpecialty: string | null;
 }) {
   const [potential, setPotential] = useState<string | null>(initialPotential);
   const [profile, setProfile] = useState<string[]>(initialProfile ?? []);
   const [shopper, setShopper] = useState<string[]>(initialShopper ?? []);
+  const [mainSpecialty, setMainSpecialty] = useState<string | null>(initialMainSpecialty);
+  const [secondarySpecialty, setSecondarySpecialty] = useState<string | null>(initialSecondarySpecialty);
   const [saving, setSaving] = useState(false);
 
   async function patch(body: object) {
@@ -113,8 +142,20 @@ export function PharmacySegmentation({
     patch({ segmentShopper: next });
   }
 
+  function toggleMainSpecialty(val: string) {
+    const next = mainSpecialty === val ? null : val;
+    setMainSpecialty(next);
+    patch({ mainSpecialty: next });
+  }
+
+  function toggleSecondarySpecialty(val: string) {
+    const next = secondarySpecialty === val ? null : val;
+    setSecondarySpecialty(next);
+    patch({ secondarySpecialty: next });
+  }
+
   return (
-    <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-3 transition-opacity", saving && "opacity-70")}>
+    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 transition-opacity", saving && "opacity-70")}>
 
       {/* ── Card 1: Store potential & size ── */}
       <div className={`bg-white rounded-2xl border border-gray-100 border-t-4 ${TEAL.border} p-4`}>
@@ -201,6 +242,53 @@ export function PharmacySegmentation({
                 </button>
               ))}
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Card 4: Specialties ── */}
+      <div className={`bg-white rounded-2xl border border-gray-100 border-t-4 ${GREEN.border} p-4`}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 ${GREEN.num}`}>
+            4
+          </span>
+          <p className={`text-sm font-bold ${GREEN.header}`}>Specialties</p>
+        </div>
+        <p className="text-xs text-gray-500 mb-3">
+          Primary and secondary Danone product domain for this account
+        </p>
+
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Main</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {SPECIALTY_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => toggleMainSpecialty(value)}
+              className={cn(
+                "text-xs px-3 py-1.5 rounded-full border transition-all",
+                mainSpecialty === value ? GREEN.active : GREEN.inactive
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Secondary</p>
+        <div className="flex flex-wrap gap-1.5">
+          {SPECIALTY_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => toggleSecondarySpecialty(value)}
+              disabled={mainSpecialty === value}
+              className={cn(
+                "text-xs px-3 py-1.5 rounded-full border transition-all",
+                secondarySpecialty === value ? GREEN.active : GREEN.inactive,
+                mainSpecialty === value && "opacity-30 cursor-not-allowed"
+              )}
+            >
+              {label}
+            </button>
           ))}
         </div>
       </div>

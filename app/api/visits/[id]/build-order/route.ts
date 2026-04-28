@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { visits, orders, orderLines, visitFiles, visitSelloutLines, visitStockLines, products } from "@/lib/db/schema";
+import { visits, orders, orderLines, visitFiles, visitSelloutLines, visitStockLines, products, pharmacies } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import {
   getLastOrderForPharmacy,
@@ -52,6 +52,11 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const pharmacy = await db.query.pharmacies.findFirst({
+    where: eq(pharmacies.id, visit.pharmacyId),
+    columns: { name: true, accountType: true, notes: true, mainSpecialty: true, secondarySpecialty: true },
+  });
+
   const [lastOrder, allProducts, peerSuggestions, shelfFiles, selloutRows, stockRows] = await Promise.all([
     getLastOrderForPharmacy(visit.pharmacyId),
     getAllProductsForOrder(),
@@ -92,7 +97,11 @@ export async function POST(
 
   try {
     const aiResult = await buildOrderWithAI({
-      pharmacyName: "",
+      pharmacyName: pharmacy?.name ?? "",
+      accountType: pharmacy?.accountType ?? "pharmacy",
+      doctorNotes: pharmacy?.notes ?? null,
+      mainSpecialty: pharmacy?.mainSpecialty ?? null,
+      secondarySpecialty: pharmacy?.secondarySpecialty ?? null,
       shelfAnalyses,
       lastOrderLines:
         lastOrder?.lines.map((l) => ({

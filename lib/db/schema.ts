@@ -109,6 +109,7 @@ export const pharmacies = pgTable(
     pharmacistName: text("pharmacist_name"),
     pharmacistPhone: text("pharmacist_phone"),
     tier: text("tier").notNull().default("c"), // "a" | "b" | "c" | "d"
+    accountType: text("account_type").notNull().default("pharmacy"), // "pharmacy" | "hospital"
     // Which rep owns this pharmacy
     repId: uuid("rep_id")
       .notNull()
@@ -124,6 +125,8 @@ export const pharmacies = pgTable(
     segmentPotential: text("segment_potential"), // "high" | "medium" | "low"
     segmentProfile: jsonb("segment_profile").$type<string[]>(), // e.g. ["expert_led", "chain_grouped"]
     segmentShopper: jsonb("segment_shopper").$type<string[]>(), // e.g. ["urban_affluent", "families"]
+    mainSpecialty: text("main_specialty"),      // primary Danone product domain
+    secondarySpecialty: text("secondary_specialty"), // secondary Danone product domain
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

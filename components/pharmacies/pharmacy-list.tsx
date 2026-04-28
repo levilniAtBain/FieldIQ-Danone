@@ -11,11 +11,35 @@ type Pharmacy = {
   name: string;
   city: string;
   tier: string;
+  accountType: string;
   pharmacistName: string | null;
   visits: { completedAt: Date | null }[];
   visitStatus: "green" | "amber" | "red";
   rep?: { name: string } | null;
 };
+
+export function PharmacyCrossIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      {/* Green cross */}
+      <rect x="7" y="0" width="10" height="24" rx="2" fill="#16a34a" />
+      <rect x="0" y="7" width="24" height="10" rx="2" fill="#16a34a" />
+      {/* Bowl of Hygieia — white */}
+      {/* Staff */}
+      <line x1="12" y1="7.5" x2="12" y2="17" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+      {/* Snake S-curve */}
+      <path
+        d="M12 9 Q14.5 9.8 14.5 11.2 Q14.5 12.6 12 12.6 Q9.5 12.6 9.5 14 Q9.5 15.4 12 15.4"
+        fill="none" stroke="white" strokeWidth="1.1" strokeLinecap="round"
+      />
+      {/* Snake head */}
+      <circle cx="12" cy="8.6" r="0.8" fill="white" />
+      {/* Bowl */}
+      <path d="M10 15.5 Q12 17.2 14 15.5" fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="10" y1="15.5" x2="14" y2="15.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
   if (pharmacies.length === 0) {
@@ -46,6 +70,16 @@ export function PharmacyList({ pharmacies }: { pharmacies: Pharmacy[] }) {
                   p.visitStatus === "red" && "bg-danger-500"
                 )}
               />
+              {/* Account type icon */}
+              {p.accountType === "hospital" ? (
+                <span className="flex-shrink-0 w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white text-xs font-bold leading-none">
+                  H
+                </span>
+              ) : (
+                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
+                  <PharmacyCrossIcon />
+                </span>
+              )}
               <div>
                 <p className="font-medium text-gray-900">{p.name}</p>
                 <p className="text-sm text-gray-500">
