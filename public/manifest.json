@@ -1,7 +1,7 @@
 {
-  "name": "FieldIQ — L'Oréal Field Force",
+  "name": "FieldIQ — Danone Field Force",
   "short_name": "FieldIQ",
-  "description": "Field sales intelligence for L'Oréal pharmacy accounts",
+  "description": "Field sales intelligence for Danone pharmacy accounts",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,13 +9,13 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/field_iq_logo_danone_ico.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/field_iq_logo_danone_ico.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
